@@ -5,7 +5,7 @@ import { redirect } from "next/navigation";
 import { z } from "zod";
 import { createClient } from "@/lib/supabase/server";
 import { errorZod, mensajeError, type Resultado } from "@/lib/acciones";
-import { parseImporte } from "@/lib/format";
+import { hoy, parseImporte } from "@/lib/format";
 import type { Database } from "@/lib/database.types";
 
 // numero y numero_seq los asigna la base (trigger) al insertar
@@ -81,9 +81,10 @@ export async function crearOperacion(_prev: Resultado, formData: FormData): Prom
   redirect(`/operaciones/${data.id}`);
 }
 
+// En una carga solo son obligatorias la operación y las bolsas: el resto es opcional.
 const esquemaCarga = z.object({
   operacion_id: z.string().uuid("Elegí la operación."),
-  fecha: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "Fecha inválida."),
+  fecha: z.preprocess((v) => (typeof v === "string" && /^\d{4}-\d{2}-\d{2}$/.test(v) ? v : hoy()), z.string()),
   bolsas: entero("Las bolsas tienen que ser un número entero.").pipe(z.number().positive("Las bolsas tienen que ser más de 0.")),
   transportista_id: uuidONull,
   chofer: z.preprocess((v) => (typeof v === "string" && v.trim() ? v.trim() : null), z.string().nullable()),
