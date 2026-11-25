@@ -1,0 +1,23 @@
+# Datos reales: nunca al repositorio
+*.xlsx
+*.xls
+*.csv
+planillas/
+datos/
+
+# Entorno y claves
+.env
+.env.*
+!.env.example
+
+# Node / Next.js
+node_modules/
+.next/
+out/
+.vercel/
+*.log
+.DS_Store
+
+# Supabase local
+supabase/.temp/
+supabase/.branches/
