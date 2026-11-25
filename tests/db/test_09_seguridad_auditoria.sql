@@ -1,7 +1,7 @@
 -- Seguridad por rol (RLS) y auditoría
 do $$
 declare admin_id uuid := gen_random_uuid(); lect_id uuid := gen_random_uuid();
-        oper_id uuid := gen_random_uuid(); extra_id uuid := gen_random_uuid(); op uuid; n bigint;
+        oper_id uuid := gen_random_uuid(); extra_id uuid := gen_random_uuid(); op uuid; op2 uuid; n bigint;
 begin
   insert into auth.users (id) values (admin_id), (lect_id), (oper_id), (extra_id);
   insert into perfiles (id, nombre, rol) values
@@ -24,12 +24,21 @@ begin
   select count(*) into n from movimientos;
   perform t.igual(n, 0::bigint, 'lectura no ve Caja');
   perform t.falla('insert into terceros (razon_social) values (''Nuevo'')', 'row-level security', 'lectura no escribe');
+  perform t.falla('select transferir_entre_cuentas(gen_random_uuid(), gen_random_uuid(), 1)', 'permiso', 'lectura no transfiere');
   reset role;
 
   -- Operador: carga operaciones pero no toca tesorería
   perform set_config('request.jwt.claim.sub', oper_id::text, true);
   set local role authenticated;
   insert into terceros (razon_social) values ('Cliente del operador');
+  -- El operador carga una operación y una carga completa: las reglas internas funcionan igual
+  insert into operaciones (modalidad, vendedor_id, comprador_id, bolsas_negociadas, precio_compra, precio_venta)
+  values ('facturado', (select id from terceros where razon_social = 'EL BAJO SRL'),
+          (select id from terceros where razon_social = 'Cliente del operador'), 100, 1000, 1100) returning id into op2;
+  insert into cargas (operacion_id, bolsas) values (op2, 100);
+  perform t.igual((select estado from comisiones where operacion_id = op2), 'pendiente_cobro'::estado_comision, 'reglas internas con usuario operador');
+  perform t.falla(format('select recalcular_comision(%L)', op2), 'permission denied', 'funciones internas no se llaman a mano');
+  perform t.falla(format('select revertir_movimiento((select id from cuentas_tesoreria limit 1), ''x'')'), 'permiso', 'operador no revierte movimientos');
   perform t.falla(format('insert into movimientos (cuenta_id, importe, concepto) values (%L, 1, ''x'')',
                          (select id from cuentas_tesoreria limit 1)), 'row-level security', 'operador no carga movimientos');
   reset role;

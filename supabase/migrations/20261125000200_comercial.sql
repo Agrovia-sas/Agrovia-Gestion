@@ -115,7 +115,7 @@ $$;
 
 -- Asigna número y protege columnas calculadas
 create or replace function fn_operaciones_before()
-returns trigger language plpgsql as $$
+returns trigger language plpgsql security definer set search_path = public as $$
 declare
   v_prefijo text;
   v_seq integer;
@@ -512,7 +512,7 @@ create trigger trg_operaciones_after_insert
 
 -- Cambios de precio, tipo de comisión o cancelación recalculan la comisión
 create or replace function fn_operaciones_after_update()
-returns trigger language plpgsql as $$
+returns trigger language plpgsql security definer set search_path = public as $$
 begin
   if pg_trigger_depth() > 1 and es_escritura_interna() then
     return new;  -- cambio interno de logística: ya recalcula quien lo llamó

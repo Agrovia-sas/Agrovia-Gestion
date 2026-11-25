@@ -577,7 +577,7 @@ end;
 $$;
 
 create or replace function fn_operaciones_obligaciones()
-returns trigger language plpgsql as $$
+returns trigger language plpgsql security definer set search_path = public as $$
 begin
   if new.modalidad <> 'facturado' and (
        tg_op = 'INSERT'
@@ -641,6 +641,7 @@ declare
   v_contra uuid;
   v_par uuid;
 begin
+  perform exigir_rol('admin', 'finanzas');
   if p_motivo is null or length(btrim(p_motivo)) = 0 then
     raise exception 'Para revertir un movimiento hace falta un motivo';
   end if;
@@ -692,6 +693,7 @@ declare
   v_sal uuid := gen_random_uuid();
   v_ent uuid := gen_random_uuid();
 begin
+  perform exigir_rol('admin', 'finanzas');
   if p_origen = p_destino then
     raise exception 'Origen y destino tienen que ser cuentas distintas';
   end if;
@@ -844,6 +846,7 @@ returns void language plpgsql security definer set search_path = public as $$
 declare
   ch cheques;
 begin
+  perform exigir_rol('admin', 'finanzas');
   select * into ch from cheques where id = p_cheque_id for update;
   update cheques set estado = 'endosado', beneficiario_id = p_beneficiario_id where id = p_cheque_id;
   if p_obligacion_id is not null then
@@ -870,6 +873,7 @@ declare
   v_desc uuid;
   v_cat uuid;
 begin
+  perform exigir_rol('admin', 'finanzas');
   select * into ch from cheques where id = p_cheque_id for update;
   if ch.origen <> 'recibido' or ch.estado <> 'en_cartera' then
     raise exception 'Solo se descuenta un cheque recibido y en cartera';
@@ -1034,6 +1038,7 @@ declare
   l extracto_lineas;
   m movimientos;
 begin
+  perform exigir_rol('admin', 'finanzas');
   select * into l from extracto_lineas where id = p_linea_id for update;
   select * into m from movimientos where id = p_movimiento_id for update;
   if l.cuenta_id <> m.cuenta_id or l.importe <> m.importe then
@@ -1060,6 +1065,7 @@ declare
   l extracto_lineas;
   v_mov uuid;
 begin
+  perform exigir_rol('admin', 'finanzas');
   select * into l from extracto_lineas where id = p_linea_id for update;
   if l.estado = 'conciliada' then
     raise exception 'La línea ya está conciliada';

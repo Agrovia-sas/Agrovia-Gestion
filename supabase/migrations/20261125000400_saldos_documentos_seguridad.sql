@@ -239,5 +239,16 @@ create policy admin on auditoria for select to authenticated using (tiene_rol('a
 -- Nadie anónimo ve nada
 revoke all on all tables in schema public from anon;
 grant select, insert, update, delete on all tables in schema public to authenticated;
+-- Funciones: nada para anónimos. Los usuarios logueados ejecutan las de
+-- consulta y las acciones (que validan rol adentro); las internas, que
+-- recalculan o tocan columnas protegidas, solo las usa el sistema.
+revoke execute on all functions in schema public from public, anon;
 grant execute on all functions in schema public to authenticated;
-revoke execute on function set_interno(boolean) from authenticated, public;
+revoke execute on function
+  set_interno(boolean),
+  recalcular_comision(uuid),
+  recalcular_logistica(uuid),
+  sincronizar_obligaciones_operacion(uuid),
+  auditar_tabla(regclass)
+from authenticated;
+alter default privileges in schema public revoke execute on functions from public, anon;

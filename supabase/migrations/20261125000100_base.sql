@@ -40,6 +40,21 @@ as $$
   select exists (select 1 from perfiles p where p.id = auth.uid() and p.activo);
 $$;
 
+-- Para las acciones que corren con permisos del sistema (revertir,
+-- transferir, endosar…): exige que el usuario logueado tenga el rol.
+-- Sin usuario logueado solo llegan las conexiones de confianza (dueño de
+-- la base, service_role), porque anon no tiene permiso de ejecución.
+create or replace function exigir_rol(variadic roles rol_usuario[])
+returns void
+language plpgsql stable
+as $$
+begin
+  if auth.uid() is not null and not tiene_rol(variadic roles) then
+    raise exception 'No tenés permiso para esta acción';
+  end if;
+end;
+$$;
+
 -- ---------------------------------------------------------------------
 -- Auditoría automática: quién cambió qué, cuándo, valor anterior y nuevo
 -- ---------------------------------------------------------------------
