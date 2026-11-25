@@ -12,8 +12,8 @@ export default async function AppLayout({ children }: { children: React.ReactNod
   return (
     <div className="min-h-screen">
       <Sidebar />
-      <div className="md:pl-64">
-        <header className="sticky top-0 z-30 flex flex-wrap items-center gap-3 border-b border-borde bg-white/95 px-4 py-3 pl-16 backdrop-blur md:pl-6">
+      <div className="md:pl-64 print:pl-0">
+        <header className="print:hidden sticky top-0 z-30 flex flex-wrap items-center gap-3 border-b border-borde bg-white/95 px-4 py-3 pl-16 backdrop-blur md:pl-6">
           <form action="/buscar" className="min-w-40 flex-1">
             <input
               name="q"

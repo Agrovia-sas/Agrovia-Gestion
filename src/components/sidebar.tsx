@@ -18,6 +18,7 @@ const GRUPOS: { titulo: string; items: Item[] }[] = [
       { href: "/terceros?rol=productor", label: "Productores y proveedores", icon: "◎" },
       { href: "/cargas", label: "Stock y cargas", icon: "▤" },
       { href: "/comisiones", label: "Comisiones", icon: "%" },
+      { href: "/comisiones/pendientes", label: "Comisiones pendientes", icon: "!" },
       { href: "/pronto/reposiciones", label: "Reposiciones", icon: "↺", pronto: true },
       { href: "/pronto/rentabilidad", label: "Rentabilidad", icon: "↗", pronto: true },
     ],
@@ -46,7 +47,9 @@ export function Sidebar() {
 
   const activo = (href: string) => {
     const base = href.split("?")[0];
-    return base === "/" ? path === "/" : path.startsWith(base);
+    if (base === "/") return path === "/";
+    if (base === "/comisiones") return path === "/comisiones";
+    return path.startsWith(base);
   };
 
   return (
@@ -54,7 +57,7 @@ export function Sidebar() {
       <button
         type="button"
         onClick={() => setAbierto(true)}
-        className="fixed left-3 top-3 z-40 rounded-lg bg-marca px-3 py-2 text-white md:hidden"
+        className="fixed left-3 top-3 z-40 rounded-lg bg-marca px-3 py-2 text-white md:hidden print:hidden"
         aria-label="Abrir menú"
       >
         ☰
@@ -62,7 +65,7 @@ export function Sidebar() {
       {abierto && <div className="fixed inset-0 z-40 bg-black/30 md:hidden" onClick={() => setAbierto(false)} />}
       <aside
         className={cx(
-          "fixed inset-y-0 left-0 z-50 flex w-64 flex-col bg-marca text-white transition-transform md:translate-x-0",
+          "fixed inset-y-0 left-0 z-50 flex w-64 flex-col bg-marca text-white transition-transform md:translate-x-0 print:hidden",
           abierto ? "translate-x-0" : "-translate-x-full",
         )}
       >
