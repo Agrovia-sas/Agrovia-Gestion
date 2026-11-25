@@ -56,3 +56,18 @@ begin
   perform t.igual(anticipo_disponible(an), 50000.00, 'queda 50.000 sin aplicar');
   perform t.falla(format('select revertir_movimiento(%L, ''x'')', m), 'anticipo', 'no se revierte un anticipo ya aplicado');
 end $$;
+
+-- Cobro previo al sistema: cancela la deuda sin mover Galicia ni Caja
+do $$
+declare op uuid; antes numeric;
+begin
+  antes := t.saldo('Banco Galicia');
+  op := t.operacion('facturado', 600, 35000, 35500);
+  perform t.cargar(op, 600);
+  perform t.falla(format('insert into aplicaciones (obligacion_id, origen, importe) values (%L, ''previo'', 300000)', t.obl_comision(op)),
+                  'check', 'previo sin nota');
+  insert into aplicaciones (obligacion_id, origen, importe, nota, fecha)
+  values (t.obl_comision(op), 'previo', 300000, 'Cobrado según planilla', current_date);
+  perform t.igual((t.comision(op)).estado, 'cobrada'::estado_comision, 'cobrada');
+  perform t.igual(t.saldo('Banco Galicia'), antes, 'no mueve Galicia');
+end $$;
