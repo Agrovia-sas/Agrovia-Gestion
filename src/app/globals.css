@@ -1,0 +1,35 @@
+@import "tailwindcss";
+
+/* Paleta AGROVIA (documento de arquitectura, sección 10) */
+@theme {
+  --color-marca: #1f4d3a;
+  --color-marca-medio: #2f6b52;
+  --color-fondo: #f5f6f4;
+  --color-borde: #e3e5e1;
+  --color-texto: #1e2321;
+  --color-texto-2: #6b726e;
+  --color-ok: #2e9e5b;
+  --color-pendiente: #d9a21b;
+  --color-vencido: #c8453b;
+  --color-proceso: #2f6fb0;
+  --font-sans: "Inter", ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+}
+
+html,
+body {
+  background: var(--color-fondo);
+  color: var(--color-texto);
+}
+
+/* Importes alineados en tablas */
+.num {
+  font-variant-numeric: tabular-nums;
+  text-align: right;
+  white-space: nowrap;
+}
+
+input,
+select,
+textarea {
+  font: inherit;
+}

@@ -8,7 +8,18 @@ Repositorio privado. **No subir datos reales** (planillas, extractos, documentos
 
 ## Estado
 
-Etapa 1 — base de datos con todas las reglas y pruebas automáticas.
+- Etapa 1 — base de datos con todas las reglas y pruebas automáticas. ✅
+- Etapa 2 — aplicación: login, panel, terceros, operaciones, cargas, comisiones, catálogos. En curso.
+
+## Aplicación
+
+```bash
+cp .env.example .env.local   # completar URL y clave publicable de Supabase
+npm install
+npm run dev
+```
+
+`src/app/(app)/` tiene las pantallas; toda escritura pasa por acciones del servidor (`actions.ts`) con la sesión del usuario, así se aplican las reglas por rol de la base.
 
 ## Base de datos
 

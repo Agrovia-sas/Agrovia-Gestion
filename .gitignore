@@ -21,3 +21,4 @@ out/
 # Supabase local
 supabase/.temp/
 supabase/.branches/
+*.tsbuildinfo
