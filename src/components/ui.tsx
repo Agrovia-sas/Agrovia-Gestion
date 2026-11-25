@@ -61,7 +61,7 @@ export function tonoLogistico(e: string): Tono {
   return e === "carga_completada" ? "ok" : e === "carga_parcial" ? "proceso" : "pendiente";
 }
 export function tonoComision(e: string): Tono {
-  return e === "cobrada" ? "ok" : e === "pendiente_cobro" ? "pendiente" : e === "anulada" ? "neutral" : "proceso";
+  return e === "cobrada" ? "ok" : e === "pendiente_cobro" ? "pendiente" : e === "anulada" || e === "sin_comision" ? "neutral" : "proceso";
 }
 
 export function ProgressBar({ value, max }: { value: number; max: number }) {

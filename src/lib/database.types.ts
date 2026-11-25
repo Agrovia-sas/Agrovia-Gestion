@@ -3168,6 +3168,7 @@ export type Database = {
         | "esperando_carga"
         | "pendiente_cobro"
         | "cobrada"
+        | "sin_comision"
         | "anulada"
       estado_linea_extracto:
         | "nueva"
@@ -3360,6 +3361,7 @@ export const Constants = {
         "esperando_carga",
         "pendiente_cobro",
         "cobrada",
+        "sin_comision",
         "anulada",
       ],
       estado_linea_extracto: [

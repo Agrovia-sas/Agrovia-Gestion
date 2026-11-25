@@ -40,6 +40,12 @@ export default async function Operacion({ params }: { params: Promise<{ id: stri
   const activa = o.estado_comercial === "cerrada";
   const esFacturado = o.modalidad === "facturado";
   const totalPagosDirectos = (pagos ?? []).reduce((s, p) => s + Number(p.importe), 0);
+  // En Facturado, el comprador le paga directo al productor: lo seguimos sin tocar la tesorería
+  const totalAPagarProductor = Number(o.precio_compra ?? 0) * (o.bolsas_totales ?? 0);
+  const pagoProductor =
+    totalPagosDirectos <= 0 ? { label: "Pago al productor: pendiente", tone: "pendiente" as const }
+    : totalPagosDirectos >= totalAPagarProductor ? { label: "Pago al productor: completo", tone: "ok" as const }
+    : { label: `Pago al productor: parcial (${Math.round((100 * totalPagosDirectos) / totalAPagarProductor)}%)`, tone: "proceso" as const };
   const ubicacionActual = o.ubicacion_tipo === "ingenio" ? `ingenio:${o.ingenio_id}` : o.ubicacion_tipo === "deposito" ? `deposito:${o.deposito_id}` : "";
   const costos = Number(o.costo_flete) + Number(o.costo_iibb) + Number(o.costo_dyc) + Number(o.costo_otros) + Number(o.costo_ganancias);
 
@@ -65,7 +71,7 @@ export default async function Operacion({ params }: { params: Promise<{ id: stri
           <div className="flex flex-wrap gap-2">
             <Badge tone={activa ? "ok" : "neutral"}>{activa ? "Cerrada" : "Cancelada"}</Badge>
             <Badge tone={tonoLogistico(o.estado_logistico!)}>{ESTADO_LOGISTICO[o.estado_logistico!]}</Badge>
-            <Badge tone="neutral">Finanzas: próxima etapa</Badge>
+            {esFacturado ? <Badge tone={pagoProductor.tone}>{pagoProductor.label}</Badge> : <Badge tone="neutral">Cobros y pagos: próxima etapa</Badge>}
             <Badge tone={tonoComision(o.estado_comision!)}>Comisión: {ESTADO_COMISION[o.estado_comision!]}</Badge>
             {o.cobro_anticipado && <Badge tone="pendiente">Cobro anticipado</Badge>}
             {o.cobro_parcial && <Badge tone="pendiente">Cobro parcial</Badge>}

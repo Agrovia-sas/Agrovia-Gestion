@@ -69,6 +69,7 @@ export const ESTADO_COMISION = {
   esperando_carga: "Esperando completar carga",
   pendiente_cobro: "Pendiente de cobro",
   cobrada: "Cobrada",
+  sin_comision: "Sin comisión",
   anulada: "Anulada",
 } as const;
 

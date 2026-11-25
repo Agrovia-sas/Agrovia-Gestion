@@ -76,3 +76,13 @@ begin
   returning id into op;
   perform t.igual((t.comision(op)).importe, 876600.00, 'utilidad A-1 = 2.922 × 300');
 end $$;
+
+-- Compra = venta: no hay comisión, el estado es "Sin comisión" (no "pendiente de cobro")
+do $$
+declare op uuid;
+begin
+  op := t.operacion('facturado', 600, 35500, 35500);
+  perform t.cargar(op, 600);
+  perform t.igual((t.comision(op)).estado, 'sin_comision'::estado_comision, 'sin comisión');
+  perform t.ok(t.obl_comision(op) is null, 'no genera cuenta a cobrar');
+end $$;
