@@ -11,7 +11,9 @@ import type { Database } from "@/lib/database.types";
 // numero y numero_seq los asigna la base (trigger) al insertar
 type NuevaOperacion = Omit<Database["public"]["Tables"]["operaciones"]["Insert"], "numero" | "numero_seq">;
 
-const uuidONull = z.preprocess((v) => (v === "" || v === undefined ? null : v), z.string().uuid().nullable());
+// Texto opcional: vacío o ausente del formulario → null
+const textoONull = z.preprocess((v) => (typeof v === "string" && v.trim() ? v.trim() : null), z.string().nullable());
+const uuidONull = z.preprocess((v) => (v === "" || v === undefined || v === null ? null : v), z.string().uuid().nullable());
 const importe = (msg: string) => z.preprocess((v) => parseImporte(v as FormDataEntryValue), z.number({ message: msg }).min(0, msg));
 const importeOpcional = z.preprocess((v) => parseImporte(v as FormDataEntryValue), z.number().min(0).nullable());
 const entero = (msg: string) => z.preprocess((v) => (v === "" ? undefined : Number(String(v).replace(/\./g, ""))), z.number({ message: msg }).int(msg));
@@ -25,7 +27,7 @@ const esquemaOperacion = z
     comisionista_id: uuidONull,
     marca_id: uuidONull,
     producto_id: uuidONull,
-    zafra: z.preprocess((v) => (v === "" ? null : Number(v)), z.number().int().min(2000).max(2100).nullable()),
+    zafra: z.preprocess((v) => (v === "" || v == null ? null : Number(v)), z.number().int().min(2000).max(2100).nullable()),
     ubicacion: z.string().optional(),
     bolsas_negociadas: entero("Las bolsas tienen que ser un número entero.").pipe(z.number().positive("Las bolsas tienen que ser más de 0.")),
     kg_por_bolsa: z.preprocess((v) => parseImporte(v as FormDataEntryValue) ?? 50, z.number().positive()),
@@ -38,8 +40,8 @@ const esquemaOperacion = z
     costo_otros: importeOpcional,
     comision_tipo: z.enum(["diferencia", "por_bolsa", "fija", "porcentaje"]),
     comision_valor: importeOpcional,
-    condiciones_pago: z.preprocess((v) => (v === "" ? null : v), z.string().nullable()),
-    observaciones: z.preprocess((v) => (v === "" ? null : v), z.string().nullable()),
+    condiciones_pago: textoONull,
+    observaciones: textoONull,
   })
   .refine((d) => d.modalidad !== "facturado" || (d.comprador_id && d.precio_venta !== null), {
     message: "En Facturado hacen falta comprador y precio de venta.",
@@ -87,12 +89,12 @@ const esquemaCarga = z.object({
   fecha: z.preprocess((v) => (typeof v === "string" && /^\d{4}-\d{2}-\d{2}$/.test(v) ? v : hoy()), z.string()),
   bolsas: entero("Las bolsas tienen que ser un número entero.").pipe(z.number().positive("Las bolsas tienen que ser más de 0.")),
   transportista_id: uuidONull,
-  chofer: z.preprocess((v) => (typeof v === "string" && v.trim() ? v.trim() : null), z.string().nullable()),
-  patente: z.preprocess((v) => (v === "" ? null : String(v).toUpperCase().replace(/\s/g, "")), z.string().nullable()),
-  remito: z.preprocess((v) => (v === "" ? null : v), z.string().nullable()),
-  orden_retiro: z.preprocess((v) => (v === "" ? null : v), z.string().nullable()),
+  chofer: textoONull,
+  patente: z.preprocess((v) => (typeof v === "string" && v.trim() ? v.toUpperCase().replace(/\s/g, "") : null), z.string().nullable()),
+  remito: textoONull,
+  orden_retiro: textoONull,
   es_apertura: z.preprocess((v) => v === "on", z.boolean()),
-  observaciones: z.preprocess((v) => (v === "" ? null : v), z.string().nullable()),
+  observaciones: textoONull,
   ubicacion: z.string().optional(),
 });
 
