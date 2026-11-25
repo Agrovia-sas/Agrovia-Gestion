@@ -91,7 +91,7 @@ export default async function Operacion({ params }: { params: Promise<{ id: stri
                   <th className={th}>Fecha</th>
                   <th className={th + " num"}>Bolsas</th>
                   <th className={th}>Desde</th>
-                  <th className={th}>Transporte</th>
+                  <th className={th}>Transporte / Chofer</th>
                   <th className={th}>Remito / Orden</th>
                   <th className={th}></th>
                 </tr>
@@ -103,7 +103,7 @@ export default async function Operacion({ params }: { params: Promise<{ id: stri
                   <td className={td}>{fecha(cg.fecha)}{cg.es_apertura && <div><Badge>Apertura</Badge></div>}</td>
                   <td className={td + " num font-medium"}>{bolsas(cg.bolsas)}</td>
                   <td className={td + " text-texto-2"}>{cg.ingenio?.nombre ?? cg.deposito?.nombre ?? "—"}</td>
-                  <td className={td + " text-texto-2"}>{[cg.transportista?.razon_social, cg.patente].filter(Boolean).join(" · ") || "—"}</td>
+                  <td className={td + " text-texto-2"}>{[cg.transportista?.razon_social, cg.patente, cg.chofer].filter(Boolean).join(" · ") || "—"}</td>
                   <td className={td + " text-texto-2"}>{[cg.remito, cg.orden_retiro && `Orden ${cg.orden_retiro}`].filter(Boolean).join(" · ") || "—"}</td>
                   <td className={td}>
                     {activa && (
@@ -132,6 +132,7 @@ export default async function Operacion({ params }: { params: Promise<{ id: stri
                     <Field label="Transportista">
                       <SelectTercero name="transportista_id" principales={c.transportistas} todos={c.terceros} etiqueta="Transportistas" />
                     </Field>
+                    <Field label="Chofer (nombre y apellido)"><input name="chofer" className={inputCls} /></Field>
                     <Field label="Patente"><input name="patente" className={inputCls} /></Field>
                     <Field label="Número de remito"><input name="remito" className={inputCls} /></Field>
                     <Field label="Orden de retiro"><input name="orden_retiro" className={inputCls} /></Field>

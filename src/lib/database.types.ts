@@ -228,6 +228,7 @@ export type Database = {
       cargas: {
         Row: {
           bolsas: number
+          chofer: string | null
           created_at: string
           created_by: string | null
           deposito_id: string | null
@@ -245,6 +246,7 @@ export type Database = {
         }
         Insert: {
           bolsas: number
+          chofer?: string | null
           created_at?: string
           created_by?: string | null
           deposito_id?: string | null
@@ -262,6 +264,7 @@ export type Database = {
         }
         Update: {
           bolsas?: number
+          chofer?: string | null
           created_at?: string
           created_by?: string | null
           deposito_id?: string | null

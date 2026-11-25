@@ -86,6 +86,7 @@ const esquemaCarga = z.object({
   fecha: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "Fecha inválida."),
   bolsas: entero("Las bolsas tienen que ser un número entero.").pipe(z.number().positive("Las bolsas tienen que ser más de 0.")),
   transportista_id: uuidONull,
+  chofer: z.preprocess((v) => (typeof v === "string" && v.trim() ? v.trim() : null), z.string().nullable()),
   patente: z.preprocess((v) => (v === "" ? null : String(v).toUpperCase().replace(/\s/g, "")), z.string().nullable()),
   remito: z.preprocess((v) => (v === "" ? null : v), z.string().nullable()),
   orden_retiro: z.preprocess((v) => (v === "" ? null : v), z.string().nullable()),

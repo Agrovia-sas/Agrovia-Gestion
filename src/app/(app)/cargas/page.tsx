@@ -20,7 +20,7 @@ export default async function Cargas() {
       .order("fecha_cierre"),
     supabase
       .from("cargas")
-      .select("id, fecha, bolsas, remito, patente, operacion:operaciones(id, numero), ingenio:ingenios(nombre), deposito:depositos(nombre)")
+      .select("id, fecha, bolsas, remito, patente, chofer, operacion:operaciones(id, numero), ingenio:ingenios(nombre), deposito:depositos(nombre)")
       .order("created_at", { ascending: false })
       .limit(15),
     supabase.from("v_stock").select("*"),
@@ -53,6 +53,7 @@ export default async function Cargas() {
               <div className="grid grid-cols-2 gap-3">
                 <Field label="Fecha"><input type="date" name="fecha" defaultValue={hoy()} className={inputCls} /></Field>
                 <Field label="Bolsas *"><input name="bolsas" inputMode="numeric" required className={inputCls} /></Field>
+                <Field label="Chofer (nombre y apellido)"><input name="chofer" className={inputCls} /></Field>
                 <Field label="Patente"><input name="patente" className={inputCls} /></Field>
                 <Field label="Remito"><input name="remito" className={inputCls} /></Field>
                 <Field label="Orden de retiro"><input name="orden_retiro" className={inputCls} /></Field>
@@ -125,7 +126,7 @@ export default async function Cargas() {
                 <th className={th}>Fecha</th>
                 <th className={th}>Op.</th>
                 <th className={th + " num"}>Bolsas</th>
-                <th className={th}>Remito / Patente</th>
+                <th className={th}>Remito / Camión / Chofer</th>
               </tr>
             }
             empty={!recientes?.length ? "Todavía no hay cargas." : undefined}
@@ -137,7 +138,7 @@ export default async function Cargas() {
                   <Link href={`/operaciones/${cg.operacion?.id}`} className="text-marca hover:underline">{cg.operacion?.numero}</Link>
                 </td>
                 <td className={td + " num"}>{bolsas(cg.bolsas)}</td>
-                <td className={td + " text-texto-2"}>{[cg.remito, cg.patente].filter(Boolean).join(" · ") || "—"}</td>
+                <td className={td + " text-texto-2"}>{[cg.remito, cg.patente, cg.chofer].filter(Boolean).join(" · ") || "—"}</td>
               </tr>
             ))}
           </Table>
