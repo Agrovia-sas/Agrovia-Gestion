@@ -2,15 +2,18 @@ import Link from "next/link";
 import { ButtonLink, Card, EstadoCarga, PageHeader, Stat, Table, cx, td, th } from "@/components/ui";
 import { createClient } from "@/lib/supabase/server";
 import { CAMPOS_PENDIENTES, ESTADOS_PENDIENTES, diasDesde, pendienteAgrovia } from "@/lib/comisiones";
-import { $, bolsas, fecha, primerDiaDelMes, MODALIDADES } from "@/lib/format";
+import { $, bolsas, fecha, hoy, primerDiaDelMes, MODALIDADES } from "@/lib/format";
 
 export const dynamic = "force-dynamic";
+
+const NOMBRE_MES = ["Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio", "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre"];
 
 export default async function Panel() {
   const supabase = await createClient();
   const mes = primerDiaDelMes();
 
-  const [{ data: pendientesRaw }, { data: abiertasRaw }, { data: percibidas }, { data: vencidas }] = await Promise.all([
+  const anio = hoy().slice(0, 4);
+  const [{ data: pendientesRaw }, { data: abiertasRaw }, { data: delAnio }, { data: vencidas }] = await Promise.all([
     // Todas las comisiones que se deben, de cualquier mes
     supabase
       .from("v_operaciones")
@@ -25,7 +28,14 @@ export default async function Panel() {
       .eq("estado_comercial", "cerrada")
       .gt("bolsas_pendientes", 0)
       .order("fecha_cierre", { ascending: true }),
-    supabase.from("v_comisiones_percibidas").select("cobrado_neto_agrovia").gte("mes", mes),
+    // Operaciones cerradas en el año, para ganancias
+    supabase
+      .from("v_operaciones")
+      .select("fecha_cierre, modalidad, bolsas_totales, comision_bruta, comision_neta_agrovia, importe_cobrado, estado_comision, fecha_cobro")
+      .eq("estado_comercial", "cerrada")
+      .gte("fecha_cierre", `${anio}-01-01`)
+      .lte("fecha_cierre", `${anio}-12-31`)
+      .limit(5000),
     supabase
       .from("v_obligaciones")
       .select("id, concepto, pendiente, vencimiento, dias_atraso, operacion_id")
@@ -43,13 +53,41 @@ export default async function Panel() {
   const viejas = pendientes.filter((o) => o.dias > 30).length;
   const abiertas = abiertasRaw ?? [];
   const bolsasPend = abiertas.reduce((s, o) => s + (o.bolsas_pendientes ?? 0), 0);
-  const cobradoMes = (percibidas ?? []).reduce((s, p) => s + Number(p.cobrado_neto_agrovia ?? 0), 0);
+  // Ganancias del año (parte de AGROVIA, sin IVA). Cobrado = proporción cobrada de cada comisión.
+  const opsAnio = delAnio ?? [];
+  const cobradoDe = (o: (typeof opsAnio)[number]) => {
+    const bruta = Number(o.comision_bruta) || 0;
+    const neta = Number(o.comision_neta_agrovia) || 0;
+    return bruta > 0 ? (Math.min(Number(o.importe_cobrado) || 0, bruta) * neta) / bruta : 0;
+  };
+  const gananciaAnio = opsAnio.reduce((s, o) => s + Number(o.comision_neta_agrovia ?? 0), 0);
+  const cobradoAnio = opsAnio.reduce((s, o) => s + cobradoDe(o), 0);
+  const cobradoMes = opsAnio
+    .filter((o) => o.estado_comision === "cobrada" && (o.fecha_cobro ?? "") >= mes)
+    .reduce((s, o) => s + Number(o.comision_neta_agrovia ?? 0), 0);
+  const porMes = Array.from({ length: 12 }, (_, i) => ({ mes: i + 1, ops: 0, bolsas: 0, ganancia: 0, cobrado: 0 }));
+  opsAnio.forEach((o) => {
+    const m = porMes[Number(o.fecha_cierre!.slice(5, 7)) - 1];
+    m.ops += 1;
+    m.bolsas += o.bolsas_totales ?? 0;
+    m.ganancia += Number(o.comision_neta_agrovia ?? 0);
+    m.cobrado += cobradoDe(o);
+  });
+  const mesesConDatos = porMes.filter((m) => m.ops > 0);
+  const totalBolsasAnio = opsAnio.reduce((s, o) => s + (o.bolsas_totales ?? 0), 0);
 
   return (
     <>
       <PageHeader title="Panel general" subtitle="Lo comercial al día. Los números de Galicia y Caja se suman en la etapa de finanzas." />
 
-      <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+      <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-5">
+        <Stat
+          label={`Ganancia ${anio}`}
+          value={$(gananciaAnio)}
+          hint={`Cobrado ${$(cobradoAnio)} · ${opsAnio.length} operaciones`}
+          tone="ok"
+          href="#ganancias"
+        />
         <Stat
           label="Comisiones por cobrar (todas)"
           value={$(totalPorCobrar)}
@@ -64,7 +102,7 @@ export default async function Panel() {
           tone="pendiente"
           href="/comisiones/pendientes?estado=pendiente_cobro"
         />
-        <Stat label="Comisiones cobradas este mes" value={$(cobradoMes)} hint="Percibido, neto de IVA y de reparto" tone="ok" href="/comisiones" />
+        <Stat label="Cobrado este mes" value={$(cobradoMes)} hint="Comisiones y utilidades cobradas" tone="proceso" href="/comisiones" />
         <Stat label="Bolsas pendientes de carga" value={bolsas(bolsasPend)} hint={`${abiertas.length} operaciones abiertas`} href="/cargas" />
       </div>
 
@@ -154,6 +192,53 @@ export default async function Panel() {
             )}
           </Card>
         </div>
+      </div>
+
+      <div id="ganancias" className="mt-6">
+        <Card title={`Ganancias ${anio} mes por mes`}>
+          <Table
+            head={
+              <tr>
+                <th className={th}>Mes</th>
+                <th className={th + " num"}>Operaciones</th>
+                <th className={th + " num"}>Bolsas</th>
+                <th className={th + " num"}>Ganancia</th>
+                <th className={th + " num"}>Cobrado</th>
+                <th className={th + " num"}>Por cobrar</th>
+              </tr>
+            }
+            empty={mesesConDatos.length === 0 ? "Todavía no hay operaciones este año." : undefined}
+          >
+            {mesesConDatos.map((m) => (
+              <tr key={m.mes} className="hover:bg-fondo">
+                <td className={td}>
+                  <Link href={`/operaciones?desde=${anio}-${String(m.mes).padStart(2, "0")}-01&hasta=${anio}-${String(m.mes).padStart(2, "0")}-${new Date(Number(anio), m.mes, 0).getDate()}`} className="hover:underline">
+                    {NOMBRE_MES[m.mes - 1]}
+                  </Link>
+                </td>
+                <td className={td + " num"}>{m.ops}</td>
+                <td className={td + " num"}>{bolsas(m.bolsas)}</td>
+                <td className={td + " num font-semibold"}>{$(m.ganancia)}</td>
+                <td className={td + " num text-ok"}>{$(m.cobrado)}</td>
+                <td className={cx(td, "num", m.ganancia - m.cobrado > 0.5 ? "text-[#9a7210]" : "text-texto-2")}>{$(Math.max(0, m.ganancia - m.cobrado))}</td>
+              </tr>
+            ))}
+            {mesesConDatos.length > 0 && (
+              <tr className="border-t-2 border-texto/20 font-semibold">
+                <td className={td}>Total {anio}</td>
+                <td className={td + " num"}>{opsAnio.length}</td>
+                <td className={td + " num"}>{bolsas(totalBolsasAnio)}</td>
+                <td className={td + " num"}>{$(gananciaAnio)}</td>
+                <td className={td + " num text-ok"}>{$(cobradoAnio)}</td>
+                <td className={td + " num"}>{$(Math.max(0, gananciaAnio - cobradoAnio))}</td>
+              </tr>
+            )}
+          </Table>
+          <p className="mt-3 text-xs text-texto-2">
+            Ganancia = comisión (Facturado) y utilidad (Menudeo y Compra-venta) de la parte de AGROVIA, sin IVA, según el mes de cierre.
+            Todavía no descuenta gastos: el resultado neto llega con la etapa de finanzas.
+          </p>
+        </Card>
       </div>
     </>
   );
