@@ -1,9 +1,9 @@
 import Link from "next/link";
 import { BotonImprimir } from "@/components/boton-imprimir";
-import { Badge, Card, PageHeader, Table, btn, cx, td, th } from "@/components/ui";
+import { Badge, Card, EstadoCarga, PageHeader, Table, btn, cx, td, th } from "@/components/ui";
 import { createClient } from "@/lib/supabase/server";
 import { CAMPOS_PENDIENTES, ESTADOS_PENDIENTES, diasDesde, pendienteAgrovia } from "@/lib/comisiones";
-import { $, bolsas, fecha, MODALIDADES } from "@/lib/format";
+import { $, fecha, MODALIDADES } from "@/lib/format";
 
 export const dynamic = "force-dynamic";
 
@@ -113,11 +113,7 @@ export default async function ComisionesPendientes({
                   )}
                 </td>
                 <td className={td}>
-                  {o.estado_comision === "pendiente_cobro" ? (
-                    <Badge tone="ok">Completa</Badge>
-                  ) : (
-                    <Badge tone="proceso">{bolsas(o.bolsas_cargadas)} / {bolsas(o.bolsas_totales)}</Badge>
-                  )}
+                  <EstadoCarga cargadas={o.bolsas_cargadas} totales={o.bolsas_totales} />
                   {o.cobro_parcial && <div className="mt-1"><Badge tone="pendiente">Cobro parcial</Badge></div>}
                 </td>
                 <td className={td + " num text-texto-2"}>{$(o.comision_neta_agrovia)}</td>

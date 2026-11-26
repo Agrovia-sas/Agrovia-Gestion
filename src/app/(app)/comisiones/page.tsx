@@ -1,7 +1,7 @@
 import Link from "next/link";
-import { Badge, PageHeader, ProgressBar, cx } from "@/components/ui";
+import { Badge, cx, EstadoCarga, PageHeader } from "@/components/ui";
 import { createClient } from "@/lib/supabase/server";
-import { $, bolsas, fecha, MODALIDADES } from "@/lib/format";
+import { $, fecha, MODALIDADES } from "@/lib/format";
 
 export const dynamic = "force-dynamic";
 
@@ -63,8 +63,7 @@ export default async function Comisiones({ searchParams }: { searchParams: Promi
                       <p className="text-xs text-texto-2">{MODALIDADES[o.modalidad!]} · cierre {fecha(o.fecha_cierre)}</p>
                       {col.estado === "esperando_carga" && (
                         <div className="mt-2">
-                          <ProgressBar value={o.bolsas_cargadas ?? 0} max={o.bolsas_totales ?? 0} />
-                          <p className="mt-1 text-xs tabular-nums text-texto-2">{bolsas(o.bolsas_cargadas)} / {bolsas(o.bolsas_totales)} bolsas</p>
+                          <EstadoCarga cargadas={o.bolsas_cargadas} totales={o.bolsas_totales} />
                         </div>
                       )}
                       {col.estado === "pendiente_cobro" && o.fecha_exigible && <p className="mt-1 text-xs text-texto-2">Exigible desde {fecha(o.fecha_exigible)}</p>}

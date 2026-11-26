@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { Badge, ButtonLink, Card, PageHeader, ProgressBar, Table, btn, inputCls, td, th, tonoComision, tonoLogistico } from "@/components/ui";
+import { Badge, btn, ButtonLink, Card, EstadoCarga, inputCls, PageHeader, Table, td, th, tonoComision, tonoLogistico } from "@/components/ui";
 import { createClient } from "@/lib/supabase/server";
 import { $, bolsas, fecha, ESTADO_COMISION, ESTADO_LOGISTICO, MODALIDADES } from "@/lib/format";
 import type { Database } from "@/lib/database.types";
@@ -92,8 +92,7 @@ export default async function Operaciones({
               </td>
               <td className={td + " num text-texto-2"}>{$(o.precio_compra)}<br />{$(o.precio_venta)}</td>
               <td className={td}>
-                <ProgressBar value={o.bolsas_cargadas ?? 0} max={o.bolsas_totales ?? 0} />
-                <div className="mt-1 text-xs tabular-nums text-texto-2">{bolsas(o.bolsas_cargadas)} / {bolsas(o.bolsas_totales)}</div>
+                <EstadoCarga cargadas={o.bolsas_cargadas} totales={o.bolsas_totales} />
               </td>
               <td className={td + " num"}>{$(o.comision_neta_agrovia)}</td>
               <td className={td}>

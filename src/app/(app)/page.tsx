@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { Badge, ButtonLink, Card, PageHeader, ProgressBar, Stat, Table, cx, td, th } from "@/components/ui";
+import { ButtonLink, Card, EstadoCarga, PageHeader, Stat, Table, cx, td, th } from "@/components/ui";
 import { createClient } from "@/lib/supabase/server";
 import { CAMPOS_PENDIENTES, ESTADOS_PENDIENTES, diasDesde, pendienteAgrovia } from "@/lib/comisiones";
 import { $, bolsas, fecha, primerDiaDelMes, MODALIDADES } from "@/lib/format";
@@ -95,7 +95,7 @@ export default async function Panel() {
                 <td className={td}>{o.comprador ?? "—"}</td>
                 <td className={cx(td, "num", o.dias > 60 ? "font-semibold text-vencido" : o.dias > 30 ? "text-[#9a7210]" : "")}>{o.dias}</td>
                 <td className={td}>
-                  {o.estado_comision === "pendiente_cobro" ? <Badge tone="ok">Completa</Badge> : <Badge tone="proceso">{bolsas(o.bolsas_cargadas)} / {bolsas(o.bolsas_totales)}</Badge>}
+                  <EstadoCarga cargadas={o.bolsas_cargadas} totales={o.bolsas_totales} />
                 </td>
                 <td className={td + " num font-semibold"}>{$(o.pendiente)}</td>
               </tr>
@@ -140,10 +140,10 @@ export default async function Panel() {
                   <li key={o.id} className="text-sm">
                     <div className="flex justify-between">
                       <Link href={`/operaciones/${o.id}`} className="font-medium text-marca hover:underline">{o.numero}</Link>
-                      <span className="tabular-nums text-texto-2">faltan {bolsas(o.bolsas_pendientes)}</span>
+                      <span className="text-xs text-texto-2">{fecha(o.fecha_cierre)}</span>
                     </div>
                     <div className="truncate text-xs text-texto-2">{o.vendedor} → {o.comprador ?? "—"}</div>
-                    <div className="mt-1"><ProgressBar value={o.bolsas_cargadas ?? 0} max={o.bolsas_totales ?? 0} /></div>
+                    <div className="mt-1"><EstadoCarga cargadas={o.bolsas_cargadas} totales={o.bolsas_totales} /></div>
                   </li>
                 ))}
               </ul>

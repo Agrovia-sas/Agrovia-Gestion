@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { ActionForm } from "@/components/action-form";
 import { SelectTercero } from "@/components/select-tercero";
-import { Card, Field, PageHeader, ProgressBar, Table, inputCls, td, th } from "@/components/ui";
+import { Card, EstadoCarga, Field, inputCls, PageHeader, Table, td, th } from "@/components/ui";
 import { createClient } from "@/lib/supabase/server";
 import { cargarCatalogos } from "@/lib/catalogos";
 import { bolsas, fecha, hoy, MODALIDADES } from "@/lib/format";
@@ -85,8 +85,7 @@ export default async function Cargas() {
                 </td>
                 <td className={td}>{o.vendedor}<div className="text-xs text-texto-2">→ {o.comprador ?? "—"}</div></td>
                 <td className={td}>
-                  <ProgressBar value={o.bolsas_cargadas ?? 0} max={o.bolsas_totales ?? 0} />
-                  <div className="mt-1 text-xs tabular-nums text-texto-2">{bolsas(o.bolsas_cargadas)} / {bolsas(o.bolsas_totales)}</div>
+                  <EstadoCarga cargadas={o.bolsas_cargadas} totales={o.bolsas_totales} />
                 </td>
                 <td className={td + " num font-medium"}>{bolsas(o.bolsas_pendientes)}</td>
               </tr>
