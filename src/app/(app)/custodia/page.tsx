@@ -4,6 +4,7 @@ import { Card, PageHeader, Table, td, th } from "@/components/ui";
 import { createClient } from "@/lib/supabase/server";
 import { cargarCatalogos } from "@/lib/catalogos";
 import { bolsas, fecha, hoy } from "@/lib/format";
+import { destinosCustodia } from "@/lib/custodia-destinos";
 import { registrarMovimiento } from "./actions";
 import { CamposMovimiento } from "./form";
 
@@ -11,10 +12,11 @@ export const dynamic = "force-dynamic";
 
 export default async function Custodia() {
   const supabase = await createClient();
-  const [{ data: saldos }, { data: fisicas }, c] = await Promise.all([
+  const [{ data: saldos }, { data: fisicas }, c, destinos] = await Promise.all([
     supabase.from("v_custodia_saldos").select("*").order("dueno"),
     supabase.from("v_custodia_fisicas").select("*"),
     cargarCatalogos(supabase),
+    destinosCustodia(supabase),
   ]);
   const lugarNombre = new Map(c.ubicaciones.map((u) => [u.value.split(":")[1], u.label]));
   const lista = (saldos ?? []).filter((s) => (s.fisicas ?? 0) !== 0 || (s.a_reponer_total ?? 0) !== 0);
@@ -34,8 +36,7 @@ export default async function Custodia() {
               <tr>
                 <th className={th}>Dueño</th>
                 <th className={th}>Dónde están</th>
-                <th className={th + " num"}>Físicas</th>
-                <th className={th + " num"}>Vendidas sin cargar</th>
+                <th className={th}>Vendidas / entregadas a</th>
                 <th className={th + " num"}>Libres</th>
                 <th className={th + " num"}>A reponer</th>
               </tr>
@@ -57,15 +58,36 @@ export default async function Custodia() {
                       </div>
                     ))}
                 </td>
-                <td className={td + " num"}>{bolsas(s.fisicas)}</td>
-                <td className={td + " num"}>{bolsas(s.vendidas_sin_cargar)}</td>
+                <td className={td + " text-xs"}>
+                  {destinos
+                    .filter((d) => d.duenoId === s.dueno_id && (d.bolsas - d.cargadas > 0 || d.manual))
+                    .map((d) => (
+                      <div key={d.key} className="leading-5">
+                        <span className="font-medium">{d.a}</span>
+                        {d.operacionId ? (
+                          <> · <Link href={`/operaciones/${d.operacionId}`} className="text-marca hover:underline">{d.numero}</Link></>
+                        ) : (
+                          " · entrega"
+                        )}
+                        {" · "}
+                        <span className="tabular-nums">{bolsas(d.bolsas)}</span>
+                        {!d.manual && (
+                          <span className={d.cargadas === 0 ? "text-[#9a7210]" : "text-proceso"}>
+                            {" "}({d.cargadas === 0 ? "sin cargar" : `cargó ${bolsas(d.cargadas)}, faltan ${bolsas(d.bolsas - d.cargadas)}`})
+                          </span>
+                        )}
+                      </div>
+                    ))}
+                  {destinos.filter((d) => d.duenoId === s.dueno_id && (d.bolsas - d.cargadas > 0 || d.manual)).length === 0 && <span className="text-texto-2">—</span>}
+                </td>
                 <td className={td + " num"}>{bolsas(s.libres)}</td>
                 <td className={td + " num font-semibold " + ((s.a_reponer_total ?? 0) > 0 ? "text-[#9a7210]" : "")}>{bolsas(s.a_reponer_total)}</td>
               </tr>
             ))}
           </Table>
           <p className="mt-3 text-xs text-texto-2">
-            Físicas: las que están en los depósitos o ingenios (incluye las vendidas que todavía no cargaron). Libres: las que todavía podés vender.
+            Dónde están: las bolsas físicas del dueño, incluidas las vendidas que todavía no cargaron. Vendidas / entregadas a: ventas pendientes de carga y entregas sin operación.
+            Libres: las que todavía podés vender.
             A reponer: las que ya vendiste (cargadas o no) y todavía no le repusiste ni pagaste.
           </p>
         </Card>

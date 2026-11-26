@@ -7,6 +7,7 @@ import { createClient } from "@/lib/supabase/server";
 import { cargarCatalogos } from "@/lib/catalogos";
 import { $, bolsas, fecha, hoy } from "@/lib/format";
 import { TIPO_CUSTODIA, efectoCustodia } from "@/lib/custodia";
+import { destinosCustodia } from "@/lib/custodia-destinos";
 import { borrarMovimiento, registrarMovimiento } from "../actions";
 import { CamposMovimiento } from "../form";
 
@@ -15,7 +16,7 @@ export const dynamic = "force-dynamic";
 export default async function CustodiaDueno({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
   const supabase = await createClient();
-  const [{ data: dueno }, { data: movs }, { data: fisicas }, c, { data: saldo }, { data: vendidas }] = await Promise.all([
+  const [{ data: dueno }, { data: movs }, { data: fisicas }, c, { data: saldo }, destinos] = await Promise.all([
     supabase.from("terceros").select("id, razon_social").eq("id", id).maybeSingle(),
     supabase
       .from("custodia_movimientos")
@@ -26,18 +27,10 @@ export default async function CustodiaDueno({ params }: { params: Promise<{ id: 
     supabase.from("v_custodia_fisicas").select("*").eq("dueno_id", id),
     cargarCatalogos(supabase),
     supabase.from("v_custodia_saldos").select("*").eq("dueno_id", id).maybeSingle(),
-    supabase
-      .from("v_operaciones")
-      .select("id, numero, comprador, bolsas_pendientes, fecha_cierre")
-      .eq("vendedor_id", id)
-      .eq("estado_comercial", "cerrada")
-      .gt("bolsas_pendientes", 0)
-      .order("fecha_cierre"),
+    destinosCustodia(supabase, id),
   ]);
   if (!dueno) notFound();
-  const { data: opsCustodia } = await supabase.from("operaciones").select("id").eq("vendedor_id", id).eq("bolsas_en_custodia", true);
-  const idsCustodia = new Set((opsCustodia ?? []).map((x) => x.id));
-  const vendidasSinCargar = (vendidas ?? []).filter((v) => v.id && idsCustodia.has(v.id));
+  const pendientesDeCarga = destinos.filter((d) => !d.manual && d.bolsas - d.cargadas > 0);
   const lugarNombre = new Map(c.ubicaciones.map((u) => [u.value.split(":")[1], u.label]));
   const lugar = (ing: string | null, dep: string | null) => (ing ?? dep ? lugarNombre.get((ing ?? dep)!) ?? "—" : null);
 
@@ -59,9 +52,42 @@ export default async function CustodiaDueno({ params }: { params: Promise<{ id: 
       />
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         <Stat label="Físicas en tu poder" value={bolsas(fis)} hint={(fisicas ?? []).filter((f) => (f.bolsas ?? 0) > 0).map((f) => `${f.lugar_id ? lugarNombre.get(f.lugar_id) : "Sin lugar"}: ${bolsas(f.bolsas)}`).join(" · ") || "—"} tone="proceso" />
-        <Stat label="Vendidas sin cargar" value={bolsas(saldo?.vendidas_sin_cargar ?? 0)} hint={vendidasSinCargar.map((v) => `${v.numero} → ${v.comprador ?? "—"}: ${bolsas(v.bolsas_pendientes)}`).join(" · ") || "—"} />
+        <Stat label="Vendidas sin cargar" value={bolsas(saldo?.vendidas_sin_cargar ?? 0)} hint={pendientesDeCarga.map((d) => `${d.a} (${d.numero}): ${bolsas(d.bolsas - d.cargadas)}`).join(" · ") || "—"} />
         <Stat label="Libres para vender" value={bolsas(saldo?.libres ?? fis)} hint="Físicas que todavía no vendiste" tone="ok" />
         <Stat label="A reponer" value={bolsas(saldo?.a_reponer_total ?? deuda)} hint="Vendidas (cargadas o no) que todavía no le repusiste" tone={(saldo?.a_reponer_total ?? deuda) > 0 ? "pendiente" : "ok"} />
+      </div>
+
+      <div className="mt-6">
+        <Card title="A quién se vendieron o entregaron sus bolsas">
+          <Table
+            head={
+              <tr>
+                <th className={th}>Fecha</th>
+                <th className={th}>A quién</th>
+                <th className={th}>Operación</th>
+                <th className={th}>Desde</th>
+                <th className={th + " num"}>Bolsas</th>
+                <th className={th + " num"}>Cargadas</th>
+                <th className={th + " num"}>Falta cargar</th>
+              </tr>
+            }
+            empty={destinos.length === 0 ? "Todavía no vendiste ni entregaste bolsas de este dueño." : undefined}
+          >
+            {destinos.map((d) => (
+              <tr key={d.key} className="hover:bg-fondo">
+                <td className={td}>{fecha(d.fecha)}</td>
+                <td className={td + " font-medium"}>{d.a}</td>
+                <td className={td}>
+                  {d.operacionId ? <Link href={`/operaciones/${d.operacionId}`} className="text-marca hover:underline">{d.numero}</Link> : <span className="text-texto-2">Entrega sin operación</span>}
+                </td>
+                <td className={td + " text-texto-2"}>{d.lugarId ? lugarNombre.get(d.lugarId) ?? "—" : "—"}</td>
+                <td className={td + " num"}>{bolsas(d.bolsas)}</td>
+                <td className={td + " num text-ok"}>{bolsas(d.cargadas)}</td>
+                <td className={td + " num " + (d.bolsas - d.cargadas > 0 ? "font-semibold text-[#9a7210]" : "text-texto-2")}>{bolsas(d.bolsas - d.cargadas)}</td>
+              </tr>
+            ))}
+          </Table>
+        </Card>
       </div>
 
       <div className="mt-6 grid gap-6 lg:grid-cols-5">
