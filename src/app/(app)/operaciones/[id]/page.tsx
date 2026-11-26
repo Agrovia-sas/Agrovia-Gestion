@@ -11,7 +11,7 @@ import {
   borrarCarga,
   cambiarComision,
   cancelarOperacion,
-  editarDatos,
+  editarOperacion,
   quitarParticipante,
   registrarAjuste,
   registrarCarga,
@@ -93,6 +93,71 @@ export default async function Operacion({ params }: { params: Promise<{ id: stri
         </div>
         {!activa && <p className="mt-4 text-sm text-texto-2">Cancelada: {o.motivo_cancelacion}</p>}
       </div>
+
+      {activa && (
+        <details className="mb-6 rounded-xl border border-borde bg-white" open={false}>
+          <summary className="cursor-pointer px-5 py-3 font-semibold text-marca">✎ Editar operación</summary>
+          <div className="border-t border-borde p-5">
+            <ActionForm action={editarOperacion.bind(null, id)} submit="Guardar cambios" resetOnSuccess={false}>
+              <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+                <Field label="Fecha de cierre"><input type="date" name="fecha_cierre" defaultValue={o.fecha_cierre ?? ""} className={inputCls} /></Field>
+                <Field label="Vendedor *">
+                  <SelectTercero name="vendedor_id" principales={c.productores} todos={c.terceros} etiqueta="Productores" defaultValue={o.vendedor_id} requerido />
+                </Field>
+                <Field label={esFacturado ? "Comprador *" : "Comprador"} hint={esFacturado ? undefined : "Vacío = todavía no se vendió"}>
+                  <SelectTercero name="comprador_id" principales={c.compradores} todos={c.terceros} etiqueta="Clientes" defaultValue={o.comprador_id} requerido={esFacturado} />
+                </Field>
+                <Field label="Zafra"><input name="zafra" inputMode="numeric" defaultValue={o.zafra ?? ""} className={inputCls} /></Field>
+                <Field label="Marca">
+                  <select name="marca_id" defaultValue={o.marca_id ?? ""} className={inputCls}>
+                    <option value="">—</option>
+                    {c.marcas.map((m) => <option key={m.id} value={m.id}>{m.nombre}</option>)}
+                  </select>
+                </Field>
+                <Field label="Dónde está la mercadería">
+                  <select name="ubicacion" defaultValue={ubicacionActual} className={inputCls}>
+                    <option value="">—</option>
+                    {c.ubicaciones.map((u) => <option key={u.value} value={u.value}>{u.label}</option>)}
+                  </select>
+                </Field>
+                <Field label="Producto">
+                  <select name="producto_id" defaultValue={o.producto_id ?? ""} className={inputCls}>
+                    <option value="">—</option>
+                    {c.productos.map((p) => <option key={p.id} value={p.id}>{p.nombre}</option>)}
+                  </select>
+                </Field>
+                <Field label="Kg por bolsa"><input name="kg_por_bolsa" inputMode="decimal" defaultValue={o.kg_por_bolsa ?? 50} className={inputCls} /></Field>
+                <Field label="Precio compra por bolsa *"><input name="precio_compra" inputMode="decimal" required defaultValue={o.precio_compra ?? ""} className={inputCls} /></Field>
+                <Field label={esFacturado ? "Precio venta por bolsa *" : "Precio venta por bolsa"}><input name="precio_venta" inputMode="decimal" required={esFacturado} defaultValue={o.precio_venta ?? ""} className={inputCls} /></Field>
+                {o.modalidad === "compraventa" && (
+                  <>
+                    <Field label="Flete por bolsa"><input name="costo_flete" inputMode="decimal" defaultValue={Number(o.costo_flete) || ""} className={inputCls} /></Field>
+                    <Field label="IIBB por bolsa"><input name="costo_iibb" inputMode="decimal" defaultValue={Number(o.costo_iibb) || ""} className={inputCls} /></Field>
+                    <Field label="DyC por bolsa"><input name="costo_dyc" inputMode="decimal" defaultValue={Number(o.costo_dyc) || ""} className={inputCls} /></Field>
+                    <Field label="Paletizado / otros por bolsa"><input name="costo_otros" inputMode="decimal" defaultValue={Number(o.costo_otros) || ""} className={inputCls} /></Field>
+                  </>
+                )}
+                <Field label="Condiciones de pago" className="lg:col-span-2"><input name="condiciones_pago" defaultValue={o.condiciones_pago ?? ""} className={inputCls} /></Field>
+                <Field label="Observaciones" className="lg:col-span-2"><input name="observaciones" defaultValue={o.observaciones ?? ""} className={inputCls} /></Field>
+              </div>
+              {o.modalidad === "compraventa" && (
+                <label className="flex items-center gap-2 text-sm">
+                  <input type="checkbox" name="precios_incluyen_iva" defaultChecked={!!o.precios_incluyen_iva} /> Los precios ya incluyen IVA
+                </label>
+              )}
+              {!esFacturado && (o.bolsas_cargadas ?? 0) === 0 && (
+                <label className="flex items-center gap-2 text-sm">
+                  <input type="checkbox" name="bolsas_en_custodia" defaultChecked={enCustodia} /> Las bolsas son del vendedor, en custodia
+                </label>
+              )}
+              <p className="text-xs text-texto-2">
+                La cantidad de bolsas se cambia con «Ampliar o reducir» (queda el motivo) y la comisión con «Cambiar el cálculo». Al guardar, el sistema acomoda solo
+                lo que se le cobra al comprador, lo que se le debe al vendedor, la comisión y el stock. Si ya hay cobros o pagos aplicados, no deja cambiar ese comprador o vendedor.
+              </p>
+            </ActionForm>
+          </div>
+        </details>
+      )}
 
       <div className="grid gap-6 lg:grid-cols-3">
         <div className="space-y-6 lg:col-span-2">
@@ -297,23 +362,6 @@ export default async function Operacion({ params }: { params: Promise<{ id: stri
               )}
             </div>
           </Card>
-
-          {/* Datos editables */}
-          {activa && (
-            <Card title="Editar datos">
-              <ActionForm action={editarDatos.bind(null, id)} resetOnSuccess={false}>
-                <Field label="Comprador">
-                  <SelectTercero name="comprador_id" principales={c.compradores} todos={c.terceros} etiqueta="Clientes" defaultValue={o.comprador_id} requerido={esFacturado} />
-                </Field>
-                <div className="grid grid-cols-2 gap-3">
-                  <Field label="Precio compra"><input name="precio_compra" inputMode="decimal" defaultValue={o.precio_compra ?? ""} className={inputCls} /></Field>
-                  <Field label="Precio venta"><input name="precio_venta" inputMode="decimal" defaultValue={o.precio_venta ?? ""} className={inputCls} /></Field>
-                </div>
-                <Field label="Condiciones de pago"><input name="condiciones_pago" defaultValue={o.condiciones_pago ?? ""} className={inputCls} /></Field>
-                <Field label="Observaciones"><textarea name="observaciones" rows={2} defaultValue={o.observaciones ?? ""} className={inputCls} /></Field>
-              </ActionForm>
-            </Card>
-          )}
 
           {activa && (o.bolsas_cargadas ?? 0) === 0 && (
             <Card title="Cancelar operación">

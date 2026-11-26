@@ -200,22 +200,51 @@ export async function cancelarOperacion(operacionId: string, _prev: Resultado, f
   return { ok: "Operación cancelada. El número no se reutiliza." };
 }
 
-export async function editarDatos(operacionId: string, _prev: Resultado, formData: FormData): Promise<Resultado> {
-  const precio_compra = parseImporte(formData.get("precio_compra"));
-  const precio_venta = parseImporte(formData.get("precio_venta"));
-  if (precio_compra === null) return { error: "Precio de compra inválido." };
+const esquemaEdicion = z.object({
+  fecha_cierre: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "Fecha de cierre inválida."),
+  vendedor_id: z.string().uuid("Elegí el vendedor."),
+  comprador_id: uuidONull,
+  marca_id: uuidONull,
+  producto_id: uuidONull,
+  zafra: z.preprocess((v) => (v === "" || v == null ? null : Number(v)), z.number().int().min(2000).max(2100).nullable()),
+  ubicacion: z.string().optional(),
+  kg_por_bolsa: z.preprocess((v) => parseImporte(v as FormDataEntryValue) ?? 50, z.number().positive()),
+  precio_compra: importe("Precio de compra inválido."),
+  precio_venta: importeOpcional,
+  condiciones_pago: textoONull,
+  observaciones: textoONull,
+});
+
+/** Edición completa de una operación. Deudas, comisión y stock se acomodan solos en la base. */
+export async function editarOperacion(operacionId: string, _prev: Resultado, formData: FormData): Promise<Resultado> {
+  const p = esquemaEdicion.safeParse(Object.fromEntries(formData));
+  if (!p.success) return { error: errorZod(p.error) };
   const supabase = await createClient();
-  const { error } = await supabase
-    .from("operaciones")
-    .update({
-      precio_compra,
-      precio_venta,
-      comprador_id: String(formData.get("comprador_id") ?? "") || null,
-      condiciones_pago: String(formData.get("condiciones_pago") ?? "") || null,
-      observaciones: String(formData.get("observaciones") ?? "") || null,
-    })
-    .eq("id", operacionId);
+  const { data: actual } = await supabase.from("operaciones").select("modalidad, bolsas_cargadas, bolsas_en_custodia").eq("id", operacionId).maybeSingle();
+  if (!actual) return { error: "No se encontró la operación." };
+  const { ubicacion: u, ...d } = p.data;
+  if (actual.modalidad === "facturado" && (!d.comprador_id || d.precio_venta === null)) {
+    return { error: "En Facturado hacen falta comprador y precio de venta." };
+  }
+  if (d.comprador_id && d.comprador_id === d.vendedor_id) return { error: "Vendedor y comprador tienen que ser distintos." };
+
+  const cambios: Database["public"]["Tables"]["operaciones"]["Update"] = { ...d, ...ubicacion(u) };
+  if (actual.modalidad === "compraventa") {
+    cambios.precios_incluyen_iva = formData.get("precios_incluyen_iva") === "on";
+    cambios.costo_flete = parseImporte(formData.get("costo_flete")) ?? 0;
+    cambios.costo_iibb = parseImporte(formData.get("costo_iibb")) ?? 0;
+    cambios.costo_dyc = parseImporte(formData.get("costo_dyc")) ?? 0;
+    cambios.costo_otros = parseImporte(formData.get("costo_otros")) ?? 0;
+  }
+  if (actual.modalidad !== "facturado" && actual.bolsas_cargadas === 0) {
+    cambios.bolsas_en_custodia = formData.get("bolsas_en_custodia") === "on";
+  }
+
+  const { error } = await supabase.from("operaciones").update(cambios).eq("id", operacionId);
   if (error) return { error: mensajeError(error) };
   revalidatePath(`/operaciones/${operacionId}`);
-  return { ok: "Datos guardados. La comisión se recalculó." };
+  revalidatePath("/operaciones");
+  revalidatePath("/");
+  revalidatePath("/custodia");
+  return { ok: "Operación actualizada. Comisión, deudas y stock se recalcularon." };
 }
