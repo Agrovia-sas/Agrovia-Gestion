@@ -20,14 +20,13 @@ export default async function Custodia() {
   ]);
   const lugarNombre = new Map(c.ubicaciones.map((u) => [u.value.split(":")[1], u.label]));
   const lista = (saldos ?? []).filter((s) => (s.fisicas ?? 0) !== 0 || (s.a_reponer_total ?? 0) !== 0);
-  const totFisicas = lista.reduce((s, x) => s + (x.fisicas ?? 0), 0);
   const totDeuda = lista.reduce((s, x) => s + (x.a_reponer_total ?? 0), 0);
 
   return (
     <>
       <PageHeader
         title="Bolsas en custodia"
-        subtitle={`Bolsas de clientes que guardás y movés. Hoy: ${bolsas(totFisicas)} físicas en tu poder · ${bolsas(totDeuda)} a reponer.`}
+        subtitle={`Bolsas de clientes que guardás y movés. Hoy tenés ${bolsas(totDeuda)} bolsas a reponer.`}
       />
       <div className="grid gap-6 lg:grid-cols-5">
         <Card title="Por dueño" className="lg:col-span-3">
@@ -86,9 +85,8 @@ export default async function Custodia() {
             ))}
           </Table>
           <p className="mt-3 text-xs text-texto-2">
-            Dónde están: las bolsas físicas del dueño, incluidas las vendidas que todavía no cargaron. Vendidas / entregadas a: ventas pendientes de carga y entregas sin operación.
-            Libres: las que todavía podés vender.
-            A reponer: las que ya vendiste (cargadas o no) y todavía no le repusiste ni pagaste.
+            Dónde están: dónde quedan bolsas del dueño hoy (incluye las vendidas que todavía no se cargaron). Vendidas / entregadas a: a quién y en qué operación.
+            Libres: las que todavía podés vender. A reponer: las que ya vendiste o entregaste y todavía no le repusiste ni pagaste.
           </p>
         </Card>
 

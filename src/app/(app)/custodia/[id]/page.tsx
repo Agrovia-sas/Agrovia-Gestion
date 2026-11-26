@@ -50,11 +50,33 @@ export default async function CustodiaDueno({ params }: { params: Promise<{ id: 
         subtitle={<Link href="/custodia" className="hover:underline">← Bolsas en custodia</Link>}
         actions={<BotonImprimir />}
       />
-      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        <Stat label="Físicas en tu poder" value={bolsas(fis)} hint={(fisicas ?? []).filter((f) => (f.bolsas ?? 0) > 0).map((f) => `${f.lugar_id ? lugarNombre.get(f.lugar_id) : "Sin lugar"}: ${bolsas(f.bolsas)}`).join(" · ") || "—"} tone="proceso" />
-        <Stat label="Vendidas sin cargar" value={bolsas(saldo?.vendidas_sin_cargar ?? 0)} hint={pendientesDeCarga.map((d) => `${d.a} (${d.numero}): ${bolsas(d.bolsas - d.cargadas)}`).join(" · ") || "—"} />
-        <Stat label="Libres para vender" value={bolsas(saldo?.libres ?? fis)} hint="Físicas que todavía no vendiste" tone="ok" />
-        <Stat label="A reponer" value={bolsas(saldo?.a_reponer_total ?? deuda)} hint="Vendidas (cargadas o no) que todavía no le repusiste" tone={(saldo?.a_reponer_total ?? deuda) > 0 ? "pendiente" : "ok"} />
+      <div className="grid gap-4 sm:grid-cols-3">
+        <Stat
+          label="A reponer"
+          value={bolsas(saldo?.a_reponer_total ?? deuda)}
+          hint="Vendidas o entregadas (cargadas o no) que todavía no le repusiste ni pagaste"
+          tone={(saldo?.a_reponer_total ?? deuda) > 0 ? "pendiente" : "ok"}
+        />
+        <Stat label="Libres para vender" value={bolsas(saldo?.libres ?? 0)} hint="Bolsas suyas que todavía no vendiste" tone="ok" />
+        <Stat
+          label="Dónde están sus bolsas hoy"
+          value={(fisicas ?? []).filter((f) => (f.bolsas ?? 0) > 0).length === 0 ? "—" : ""}
+          hint={
+            <span className="block space-y-0.5 text-sm text-texto">
+              {(fisicas ?? [])
+                .filter((f) => (f.bolsas ?? 0) > 0)
+                .map((f) => {
+                  const pend = pendientesDeCarga.filter((d) => d.lugarId === f.lugar_id);
+                  return (
+                    <span key={f.lugar_id ?? "sin"} className="block">
+                      {f.lugar_id ? lugarNombre.get(f.lugar_id) : "Sin lugar"}: <strong className="tabular-nums">{bolsas(f.bolsas)}</strong>
+                      {pend.length > 0 && <span className="text-texto-2"> · vendidas a {pend.map((d) => `${d.a} (${d.numero})`).join(", ")}, sin cargar</span>}
+                    </span>
+                  );
+                })}
+            </span>
+          }
+        />
       </div>
 
       <div className="mt-6">
@@ -99,8 +121,6 @@ export default async function CustodiaDueno({ params }: { params: Promise<{ id: 
                 <th className={th}>Movimiento</th>
                 <th className={th}>Detalle</th>
                 <th className={th + " num"}>Bolsas</th>
-                <th className={th + " num"}>Físicas</th>
-                <th className={th + " num"}>Entregadas sin reponer</th>
                 <th className={th + " print:hidden"}></th>
               </tr>
             }
@@ -133,8 +153,6 @@ export default async function CustodiaDueno({ params }: { params: Promise<{ id: 
                     {m.observaciones && !op && <div>{m.observaciones}</div>}
                   </td>
                   <td className={td + " num font-medium"}>{bolsas(m.bolsas)}</td>
-                  <td className={td + " num"}>{bolsas(m.fis)}</td>
-                  <td className={td + " num"}>{bolsas(m.deuda)}</td>
                   <td className={td + " print:hidden"}>
                     {!m.carga_id && (
                       <ActionForm action={borrarMovimiento.bind(null, m.id, id)} submit="Borrar" variant="danger" confirm="¿Borrar este movimiento?" className="space-y-1 text-xs" />

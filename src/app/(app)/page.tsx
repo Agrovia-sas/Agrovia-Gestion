@@ -181,7 +181,6 @@ export default async function Panel() {
                   <li key={x.dueno_id}>
                     <Link href={`/custodia/${x.dueno_id}`} className="font-medium text-marca hover:underline">{x.dueno}</Link>
                     <div className="flex flex-wrap gap-x-3 text-xs tabular-nums">
-                      <span>Físicas {bolsas(x.fisicas)}</span>
                       <span>Libres {bolsas(x.libres)}</span>
                       {(x.a_reponer_total ?? 0) > 0 && <span className="font-medium text-[#9a7210]">A reponer {bolsas(x.a_reponer_total)}</span>}
                     </div>
