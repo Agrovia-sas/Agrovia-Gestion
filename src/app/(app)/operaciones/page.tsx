@@ -53,6 +53,8 @@ export default async function Operaciones({
     contar("compraventa"),
     supabase.from("operaciones").select("id").eq("bolsas_en_custodia", true),
   ]);
+  const { data: repos } = await supabase.from("custodia_movimientos").select("operacion_id").eq("tipo", "reposicion").not("operacion_id", "is", null);
+  const reponen = new Set((repos ?? []).map((r) => r.operacion_id));
   const cuentas: Record<string, number> = { facturado: cF.count ?? 0, menudeo: cM.count ?? 0, compraventa: cC.count ?? 0 };
   cuentas[""] = cuentas.facturado + cuentas.menudeo + cuentas.compraventa;
   const enCustodia = new Set((custodia ?? []).map((x) => x.id));
@@ -220,6 +222,7 @@ export default async function Operaciones({
                   <Link href={`/operaciones/${o.id}`} className="font-medium text-marca hover:underline">{o.numero}</Link>
                   <div className="text-xs text-texto-2">{modalidad ? "" : `${MODALIDADES[o.modalidad!]} · `}{fecha(o.fecha_cierre)}</div>
                   {enCustodia.has(o.id!) && <Badge tone="proceso">Custodia</Badge>}
+                  {reponen.has(o.id!) && <Badge tone="ok">Reposición</Badge>}
                 </td>
                 <td className={td}>
                   <div className="font-medium">{o.vendedor}</div>

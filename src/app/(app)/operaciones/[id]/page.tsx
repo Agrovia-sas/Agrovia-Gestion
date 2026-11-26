@@ -28,6 +28,13 @@ export default async function Operacion({ params }: { params: Promise<{ id: stri
   if (!o) notFound();
   const { data: extra } = await supabase.from("operaciones").select("bolsas_en_custodia").eq("id", id).maybeSingle();
   const enCustodia = !!extra?.bolsas_en_custodia;
+  // Bolsas de esta operación que repusieron o se entregaron a un dueño de custodia
+  const { data: vinculosCustodia } = await supabase
+    .from("custodia_movimientos")
+    .select("id, tipo, bolsas, dueno_id, dueno:terceros!custodia_movimientos_dueno_id_fkey(razon_social)")
+    .eq("operacion_id", id)
+    .in("tipo", ["reposicion", "entrega"])
+    .is("carga_id", null);
 
   const [{ data: cargas }, { data: ajustes }, { data: participantes }, { data: pagos }, { data: historial }, { data: marca }, c] = await Promise.all([
     supabase.from("cargas").select("*, transportista:terceros(razon_social), ingenio:ingenios(nombre), deposito:depositos(nombre)").eq("operacion_id", id).order("fecha"),
@@ -80,6 +87,13 @@ export default async function Operacion({ params }: { params: Promise<{ id: stri
                 <Badge tone="proceso">Bolsas en custodia de {o.vendedor}</Badge>
               </Link>
             )}
+            {(vinculosCustodia ?? []).map((v) => (
+              <Link key={v.id} href={`/custodia/${v.dueno_id}`}>
+                <Badge tone={v.tipo === "reposicion" ? "ok" : "proceso"}>
+                  {v.tipo === "reposicion" ? "Repone" : "Usa bolsas de"} {(v.dueno as { razon_social: string } | null)?.razon_social}: {bolsas(v.bolsas)}
+                </Badge>
+              </Link>
+            ))}
             {o.cobro_anticipado && <Badge tone="pendiente">Cobro anticipado</Badge>}
             {o.cobro_parcial && <Badge tone="pendiente">Cobro parcial</Badge>}
           </div>
