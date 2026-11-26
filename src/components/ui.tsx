@@ -122,27 +122,19 @@ export function Empty({ children }: { children: ReactNode }) {
   return <p className="py-8 text-center text-sm text-texto-2">{children}</p>;
 }
 
-/** Estado de carga: cuánto está cargado y cuánto falta, por separado. */
+/** Estado de carga: cuánto está cargado y cuánto falta, por separado (sin barra, compacto). */
 export function EstadoCarga({ cargadas, totales }: { cargadas: number | null; totales: number | null }) {
   const c = cargadas ?? 0;
   const t = totales ?? 0;
   const faltan = Math.max(0, t - c);
   const fmt = (n: number) => n.toLocaleString("es-AR");
   if (t > 0 && faltan === 0) {
-    return (
-      <div className="min-w-36">
-        <ProgressBar value={c} max={t} />
-        <p className="mt-1 text-xs font-medium text-ok">✓ Cargadas {fmt(c)} (completa)</p>
-      </div>
-    );
+    return <span className="text-xs font-medium whitespace-nowrap text-ok">✓ Cargado {fmt(c)}</span>;
   }
   return (
-    <div className="min-w-36">
-      <ProgressBar value={c} max={t} />
-      <p className="mt-1 flex flex-wrap gap-x-2 text-xs tabular-nums">
-        <span className="text-ok">Cargadas {fmt(c)}</span>
-        <span className="font-medium text-[#9a7210]">Pendientes {fmt(faltan)}</span>
-      </p>
-    </div>
+    <span className="flex flex-col text-xs leading-5 tabular-nums whitespace-nowrap">
+      <span className="text-ok">Cargado {fmt(c)}</span>
+      <span className="font-medium text-[#9a7210]">Pendiente de carga {fmt(faltan)}</span>
+    </span>
   );
 }
