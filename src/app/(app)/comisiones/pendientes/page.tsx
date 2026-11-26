@@ -89,6 +89,7 @@ export default async function ComisionesPendientes({
                 <th className={th}>Op.</th>
                 <th className={th}>Cierre</th>
                 <th className={th + " num"}>Días</th>
+                <th className={th}>Productor</th>
                 <th className={th}>Comprador</th>
                 <th className={th}>Carga</th>
                 <th className={th + " num"}>Comisión</th>
@@ -105,6 +106,7 @@ export default async function ComisionesPendientes({
                 </td>
                 <td className={td}>{fecha(o.fecha_cierre)}</td>
                 <td className={cx(td, "num", o.dias > 60 ? "font-semibold text-vencido" : o.dias > 30 ? "text-[#9a7210]" : "")}>{o.dias}</td>
+                <td className={td}>{o.vendedor}</td>
                 <td className={td}>
                   {o.comprador_id ? (
                     <Link href={filtroLink({ comprador: o.comprador_id })} className="hover:underline">{o.comprador}</Link>
@@ -122,7 +124,7 @@ export default async function ComisionesPendientes({
             ))}
             {lista.length > 0 && (
               <tr className="border-t-2 border-texto/20">
-                <td className={td + " font-semibold"} colSpan={6}>Total</td>
+                <td className={td + " font-semibold"} colSpan={7}>Total</td>
                 <td className={td + " num font-semibold"}>{$(total)}</td>
               </tr>
             )}

@@ -78,7 +78,7 @@ export default async function Panel() {
             head={
               <tr>
                 <th className={th}>Op.</th>
-                <th className={th}>Comprador</th>
+                <th className={th}>Productor → Comprador</th>
                 <th className={th + " num"}>Días</th>
                 <th className={th}>Carga</th>
                 <th className={th + " num"}>Falta cobrar</th>
@@ -92,7 +92,10 @@ export default async function Panel() {
                   <Link href={`/operaciones/${o.id}`} className="font-medium text-marca hover:underline">{o.numero}</Link>
                   <div className="text-xs text-texto-2">{MODALIDADES[o.modalidad!]} · {fecha(o.fecha_cierre)}</div>
                 </td>
-                <td className={td}>{o.comprador ?? "—"}</td>
+                <td className={td}>
+                  <div className="font-medium">{o.vendedor}</div>
+                  <div className="text-xs text-texto-2">→ {o.comprador ?? "sin comprador"}</div>
+                </td>
                 <td className={cx(td, "num", o.dias > 60 ? "font-semibold text-vencido" : o.dias > 30 ? "text-[#9a7210]" : "")}>{o.dias}</td>
                 <td className={td}>
                   <EstadoCarga cargadas={o.bolsas_cargadas} totales={o.bolsas_totales} />
@@ -142,7 +145,8 @@ export default async function Panel() {
                       <Link href={`/operaciones/${o.id}`} className="font-medium text-marca hover:underline">{o.numero}</Link>
                       <span className="text-xs text-texto-2">{fecha(o.fecha_cierre)}</span>
                     </div>
-                    <div className="truncate text-xs text-texto-2">{o.vendedor} → {o.comprador ?? "—"}</div>
+                    <div className="truncate text-sm">Productor: <span className="font-medium">{o.vendedor}</span></div>
+                    <div className="truncate text-xs text-texto-2">Comprador: {o.comprador ?? "—"}</div>
                     <div className="mt-1"><EstadoCarga cargadas={o.bolsas_cargadas} totales={o.bolsas_totales} /></div>
                   </li>
                 ))}
