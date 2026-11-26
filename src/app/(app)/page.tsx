@@ -13,7 +13,7 @@ export default async function Panel() {
   const mes = primerDiaDelMes();
 
   const anio = hoy().slice(0, 4);
-  const [{ data: pendientesRaw }, { data: abiertasRaw }, { data: delAnio }, { data: vencidas }] = await Promise.all([
+  const [{ data: pendientesRaw }, { data: abiertasRaw }, { data: delAnio }, { data: vencidas }, { data: custodia }] = await Promise.all([
     // Todas las comisiones que se deben, de cualquier mes
     supabase
       .from("v_operaciones")
@@ -42,7 +42,9 @@ export default async function Panel() {
       .eq("tipo", "comision")
       .gt("dias_atraso", 0)
       .order("vencimiento"),
+    supabase.from("v_custodia_saldos").select("dueno_id, dueno, fisicas, a_reponer").order("dueno"),
   ]);
+  const enCustodia = (custodia ?? []).filter((x) => (x.fisicas ?? 0) !== 0 || (x.a_reponer ?? 0) !== 0);
 
   const pendientes = (pendientesRaw ?? [])
     .map((o) => ({ ...o, pendiente: pendienteAgrovia(o), dias: diasDesde(o.fecha_cierre) }))
@@ -171,6 +173,22 @@ export default async function Panel() {
               </ul>
             )}
           </Card>
+
+          {enCustodia.length > 0 && (
+            <Card title="Bolsas en custodia" actions={<ButtonLink href="/custodia" variant="secondary">Ver</ButtonLink>}>
+              <ul className="space-y-2 text-sm">
+                {enCustodia.map((x) => (
+                  <li key={x.dueno_id}>
+                    <Link href={`/custodia/${x.dueno_id}`} className="font-medium text-marca hover:underline">{x.dueno}</Link>
+                    <div className="flex flex-wrap gap-x-3 text-xs tabular-nums">
+                      <span>Físicas {bolsas(x.fisicas)}</span>
+                      {(x.a_reponer ?? 0) > 0 && <span className="font-medium text-[#9a7210]">A reponer {bolsas(x.a_reponer)}</span>}
+                    </div>
+                  </li>
+                ))}
+              </ul>
+            </Card>
+          )}
 
           <Card title="Carga pendiente" actions={<ButtonLink href="/cargas" variant="secondary">Ver</ButtonLink>}>
             {abiertas.length === 0 ? (

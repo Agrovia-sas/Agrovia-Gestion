@@ -34,6 +34,7 @@ const esquemaOperacion = z
     precio_compra: importe("Precio de compra inválido."),
     precio_venta: importeOpcional,
     precios_incluyen_iva: z.preprocess((v) => v === "on", z.boolean()),
+    bolsas_en_custodia: z.preprocess((v) => v === "on", z.boolean()),
     costo_flete: importeOpcional,
     costo_iibb: importeOpcional,
     costo_dyc: importeOpcional,
@@ -49,7 +50,8 @@ const esquemaOperacion = z
   .refine((d) => d.comision_tipo === "diferencia" || d.comision_valor !== null, {
     message: "Indicá el valor de la comisión.",
   })
-  .refine((d) => d.comprador_id !== d.vendedor_id, { message: "Vendedor y comprador tienen que ser distintos." });
+  .refine((d) => d.comprador_id !== d.vendedor_id, { message: "Vendedor y comprador tienen que ser distintos." })
+  .refine((d) => !d.bolsas_en_custodia || d.modalidad !== "facturado", { message: "En Facturado no hay bolsas en custodia." });
 
 function ubicacion(u: string | undefined) {
   // Valor del select: "ingenio:<id>" o "deposito:<id>"

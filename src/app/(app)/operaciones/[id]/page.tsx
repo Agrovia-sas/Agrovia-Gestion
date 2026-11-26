@@ -26,6 +26,8 @@ export default async function Operacion({ params }: { params: Promise<{ id: stri
 
   const { data: o } = await supabase.from("v_operaciones").select("*").eq("id", id).maybeSingle();
   if (!o) notFound();
+  const { data: extra } = await supabase.from("operaciones").select("bolsas_en_custodia").eq("id", id).maybeSingle();
+  const enCustodia = !!extra?.bolsas_en_custodia;
 
   const [{ data: cargas }, { data: ajustes }, { data: participantes }, { data: pagos }, { data: historial }, { data: marca }, c] = await Promise.all([
     supabase.from("cargas").select("*, transportista:terceros(razon_social), ingenio:ingenios(nombre), deposito:depositos(nombre)").eq("operacion_id", id).order("fecha"),
@@ -73,6 +75,11 @@ export default async function Operacion({ params }: { params: Promise<{ id: stri
             <Badge tone={tonoLogistico(o.estado_logistico!)}>{ESTADO_LOGISTICO[o.estado_logistico!]}</Badge>
             {esFacturado ? <Badge tone={pagoProductor.tone}>{pagoProductor.label}</Badge> : <Badge tone="neutral">Cobros y pagos: próxima etapa</Badge>}
             <Badge tone={tonoComision(o.estado_comision!)}>Comisión: {ESTADO_COMISION[o.estado_comision!]}</Badge>
+            {enCustodia && (
+              <Link href={`/custodia/${o.vendedor_id}`}>
+                <Badge tone="proceso">Bolsas en custodia de {o.vendedor}</Badge>
+              </Link>
+            )}
             {o.cobro_anticipado && <Badge tone="pendiente">Cobro anticipado</Badge>}
             {o.cobro_parcial && <Badge tone="pendiente">Cobro parcial</Badge>}
           </div>

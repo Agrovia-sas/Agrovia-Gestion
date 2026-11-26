@@ -70,6 +70,13 @@ export type Database = {
             referencedRelation: "v_cuentas_corrientes"
             referencedColumns: ["tercero_id"]
           },
+          {
+            foreignKeyName: "anticipos_tercero_id_fkey"
+            columns: ["tercero_id"]
+            isOneToOne: false
+            referencedRelation: "v_custodia_saldos"
+            referencedColumns: ["dueno_id"]
+          },
         ]
       }
       aplicaciones: {
@@ -87,6 +94,7 @@ export type Database = {
           iva_facturado: number
           motivo_anulacion: string | null
           movimiento_id: string | null
+          nota: string | null
           obligacion_compensada_id: string | null
           obligacion_id: string
           origen: Database["public"]["Enums"]["origen_aplicacion"]
@@ -107,6 +115,7 @@ export type Database = {
           iva_facturado?: number
           motivo_anulacion?: string | null
           movimiento_id?: string | null
+          nota?: string | null
           obligacion_compensada_id?: string | null
           obligacion_id: string
           origen: Database["public"]["Enums"]["origen_aplicacion"]
@@ -127,6 +136,7 @@ export type Database = {
           iva_facturado?: number
           motivo_anulacion?: string | null
           movimiento_id?: string | null
+          nota?: string | null
           obligacion_compensada_id?: string | null
           obligacion_id?: string
           origen?: Database["public"]["Enums"]["origen_aplicacion"]
@@ -330,6 +340,13 @@ export type Database = {
             referencedRelation: "v_cuentas_corrientes"
             referencedColumns: ["tercero_id"]
           },
+          {
+            foreignKeyName: "cargas_transportista_id_fkey"
+            columns: ["transportista_id"]
+            isOneToOne: false
+            referencedRelation: "v_custodia_saldos"
+            referencedColumns: ["dueno_id"]
+          },
         ]
       }
       categorias_gasto: {
@@ -475,6 +492,13 @@ export type Database = {
             referencedColumns: ["tercero_id"]
           },
           {
+            foreignKeyName: "cheques_beneficiario_id_fkey"
+            columns: ["beneficiario_id"]
+            isOneToOne: false
+            referencedRelation: "v_custodia_saldos"
+            referencedColumns: ["dueno_id"]
+          },
+          {
             foreignKeyName: "cheques_cuenta_id_fkey"
             columns: ["cuenta_id"]
             isOneToOne: false
@@ -501,6 +525,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "v_cuentas_corrientes"
             referencedColumns: ["tercero_id"]
+          },
+          {
+            foreignKeyName: "cheques_entregado_por_id_fkey"
+            columns: ["entregado_por_id"]
+            isOneToOne: false
+            referencedRelation: "v_custodia_saldos"
+            referencedColumns: ["dueno_id"]
           },
           {
             foreignKeyName: "cheques_operacion_id_fkey"
@@ -578,6 +609,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "v_cuentas_corrientes"
             referencedColumns: ["tercero_id"]
+          },
+          {
+            foreignKeyName: "comision_participantes_tercero_id_fkey"
+            columns: ["tercero_id"]
+            isOneToOne: false
+            referencedRelation: "v_custodia_saldos"
+            referencedColumns: ["dueno_id"]
           },
         ]
       }
@@ -717,6 +755,181 @@ export type Database = {
         }
         Relationships: []
       }
+      custodia_movimientos: {
+        Row: {
+          bolsas: number
+          carga_id: string | null
+          chofer: string | null
+          created_at: string
+          created_by: string | null
+          desde_deposito_id: string | null
+          desde_ingenio_id: string | null
+          destinatario_id: string | null
+          dueno_id: string
+          fecha: string
+          hacia_deposito_id: string | null
+          hacia_ingenio_id: string | null
+          id: string
+          importe: number | null
+          marca_id: string | null
+          observaciones: string | null
+          operacion_id: string | null
+          patente: string | null
+          remito: string | null
+          tipo: Database["public"]["Enums"]["tipo_mov_custodia"]
+        }
+        Insert: {
+          bolsas: number
+          carga_id?: string | null
+          chofer?: string | null
+          created_at?: string
+          created_by?: string | null
+          desde_deposito_id?: string | null
+          desde_ingenio_id?: string | null
+          destinatario_id?: string | null
+          dueno_id: string
+          fecha?: string
+          hacia_deposito_id?: string | null
+          hacia_ingenio_id?: string | null
+          id?: string
+          importe?: number | null
+          marca_id?: string | null
+          observaciones?: string | null
+          operacion_id?: string | null
+          patente?: string | null
+          remito?: string | null
+          tipo: Database["public"]["Enums"]["tipo_mov_custodia"]
+        }
+        Update: {
+          bolsas?: number
+          carga_id?: string | null
+          chofer?: string | null
+          created_at?: string
+          created_by?: string | null
+          desde_deposito_id?: string | null
+          desde_ingenio_id?: string | null
+          destinatario_id?: string | null
+          dueno_id?: string
+          fecha?: string
+          hacia_deposito_id?: string | null
+          hacia_ingenio_id?: string | null
+          id?: string
+          importe?: number | null
+          marca_id?: string | null
+          observaciones?: string | null
+          operacion_id?: string | null
+          patente?: string | null
+          remito?: string | null
+          tipo?: Database["public"]["Enums"]["tipo_mov_custodia"]
+        }
+        Relationships: [
+          {
+            foreignKeyName: "custodia_movimientos_carga_id_fkey"
+            columns: ["carga_id"]
+            isOneToOne: true
+            referencedRelation: "cargas"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "custodia_movimientos_desde_deposito_id_fkey"
+            columns: ["desde_deposito_id"]
+            isOneToOne: false
+            referencedRelation: "depositos"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "custodia_movimientos_desde_ingenio_id_fkey"
+            columns: ["desde_ingenio_id"]
+            isOneToOne: false
+            referencedRelation: "ingenios"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "custodia_movimientos_destinatario_id_fkey"
+            columns: ["destinatario_id"]
+            isOneToOne: false
+            referencedRelation: "terceros"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "custodia_movimientos_destinatario_id_fkey"
+            columns: ["destinatario_id"]
+            isOneToOne: false
+            referencedRelation: "v_cuentas_corrientes"
+            referencedColumns: ["tercero_id"]
+          },
+          {
+            foreignKeyName: "custodia_movimientos_destinatario_id_fkey"
+            columns: ["destinatario_id"]
+            isOneToOne: false
+            referencedRelation: "v_custodia_saldos"
+            referencedColumns: ["dueno_id"]
+          },
+          {
+            foreignKeyName: "custodia_movimientos_dueno_id_fkey"
+            columns: ["dueno_id"]
+            isOneToOne: false
+            referencedRelation: "terceros"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "custodia_movimientos_dueno_id_fkey"
+            columns: ["dueno_id"]
+            isOneToOne: false
+            referencedRelation: "v_cuentas_corrientes"
+            referencedColumns: ["tercero_id"]
+          },
+          {
+            foreignKeyName: "custodia_movimientos_dueno_id_fkey"
+            columns: ["dueno_id"]
+            isOneToOne: false
+            referencedRelation: "v_custodia_saldos"
+            referencedColumns: ["dueno_id"]
+          },
+          {
+            foreignKeyName: "custodia_movimientos_hacia_deposito_id_fkey"
+            columns: ["hacia_deposito_id"]
+            isOneToOne: false
+            referencedRelation: "depositos"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "custodia_movimientos_hacia_ingenio_id_fkey"
+            columns: ["hacia_ingenio_id"]
+            isOneToOne: false
+            referencedRelation: "ingenios"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "custodia_movimientos_marca_id_fkey"
+            columns: ["marca_id"]
+            isOneToOne: false
+            referencedRelation: "marcas"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "custodia_movimientos_operacion_id_fkey"
+            columns: ["operacion_id"]
+            isOneToOne: false
+            referencedRelation: "operaciones"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "custodia_movimientos_operacion_id_fkey"
+            columns: ["operacion_id"]
+            isOneToOne: false
+            referencedRelation: "v_comisiones_percibidas"
+            referencedColumns: ["operacion_id"]
+          },
+          {
+            foreignKeyName: "custodia_movimientos_operacion_id_fkey"
+            columns: ["operacion_id"]
+            isOneToOne: false
+            referencedRelation: "v_operaciones"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       depositos: {
         Row: {
           activo: boolean
@@ -750,6 +963,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "v_cuentas_corrientes"
             referencedColumns: ["tercero_id"]
+          },
+          {
+            foreignKeyName: "depositos_canero_id_fkey"
+            columns: ["canero_id"]
+            isOneToOne: false
+            referencedRelation: "v_custodia_saldos"
+            referencedColumns: ["dueno_id"]
           },
         ]
       }
@@ -958,6 +1178,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "v_cuentas_corrientes"
             referencedColumns: ["tercero_id"]
+          },
+          {
+            foreignKeyName: "documento_vinculos_tercero_id_fkey"
+            columns: ["tercero_id"]
+            isOneToOne: false
+            referencedRelation: "v_custodia_saldos"
+            referencedColumns: ["dueno_id"]
           },
         ]
       }
@@ -1234,6 +1461,13 @@ export type Database = {
             referencedRelation: "v_cuentas_corrientes"
             referencedColumns: ["tercero_id"]
           },
+          {
+            foreignKeyName: "gastos_proveedor_id_fkey"
+            columns: ["proveedor_id"]
+            isOneToOne: false
+            referencedRelation: "v_custodia_saldos"
+            referencedColumns: ["dueno_id"]
+          },
         ]
       }
       ingenios: {
@@ -1412,6 +1646,13 @@ export type Database = {
             referencedRelation: "v_cuentas_corrientes"
             referencedColumns: ["tercero_id"]
           },
+          {
+            foreignKeyName: "movimientos_tercero_id_fkey"
+            columns: ["tercero_id"]
+            isOneToOne: false
+            referencedRelation: "v_custodia_saldos"
+            referencedColumns: ["dueno_id"]
+          },
         ]
       }
       numeradores: {
@@ -1564,6 +1805,13 @@ export type Database = {
             referencedRelation: "v_cuentas_corrientes"
             referencedColumns: ["tercero_id"]
           },
+          {
+            foreignKeyName: "obligaciones_tercero_id_fkey"
+            columns: ["tercero_id"]
+            isOneToOne: false
+            referencedRelation: "v_custodia_saldos"
+            referencedColumns: ["dueno_id"]
+          },
         ]
       }
       operacion_ajustes: {
@@ -1623,6 +1871,7 @@ export type Database = {
           alicuota_iva: number
           bolsas_ajustes: number
           bolsas_cargadas: number
+          bolsas_en_custodia: boolean
           bolsas_negociadas: number
           comision_tipo: Database["public"]["Enums"]["tipo_comision"]
           comision_valor: number | null
@@ -1662,6 +1911,7 @@ export type Database = {
           alicuota_iva?: number
           bolsas_ajustes?: number
           bolsas_cargadas?: number
+          bolsas_en_custodia?: boolean
           bolsas_negociadas: number
           comision_tipo?: Database["public"]["Enums"]["tipo_comision"]
           comision_valor?: number | null
@@ -1701,6 +1951,7 @@ export type Database = {
           alicuota_iva?: number
           bolsas_ajustes?: number
           bolsas_cargadas?: number
+          bolsas_en_custodia?: boolean
           bolsas_negociadas?: number
           comision_tipo?: Database["public"]["Enums"]["tipo_comision"]
           comision_valor?: number | null
@@ -1752,6 +2003,13 @@ export type Database = {
             referencedColumns: ["tercero_id"]
           },
           {
+            foreignKeyName: "operaciones_comisionista_id_fkey"
+            columns: ["comisionista_id"]
+            isOneToOne: false
+            referencedRelation: "v_custodia_saldos"
+            referencedColumns: ["dueno_id"]
+          },
+          {
             foreignKeyName: "operaciones_comprador_id_fkey"
             columns: ["comprador_id"]
             isOneToOne: false
@@ -1764,6 +2022,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "v_cuentas_corrientes"
             referencedColumns: ["tercero_id"]
+          },
+          {
+            foreignKeyName: "operaciones_comprador_id_fkey"
+            columns: ["comprador_id"]
+            isOneToOne: false
+            referencedRelation: "v_custodia_saldos"
+            referencedColumns: ["dueno_id"]
           },
           {
             foreignKeyName: "operaciones_deposito_id_fkey"
@@ -1806,6 +2071,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "v_cuentas_corrientes"
             referencedColumns: ["tercero_id"]
+          },
+          {
+            foreignKeyName: "operaciones_vendedor_id_fkey"
+            columns: ["vendedor_id"]
+            isOneToOne: false
+            referencedRelation: "v_custodia_saldos"
+            referencedColumns: ["dueno_id"]
           },
         ]
       }
@@ -1907,6 +2179,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "v_cuentas_corrientes"
             referencedColumns: ["tercero_id"]
+          },
+          {
+            foreignKeyName: "reparto_gastos_tercero_id_fkey"
+            columns: ["tercero_id"]
+            isOneToOne: false
+            referencedRelation: "v_custodia_saldos"
+            referencedColumns: ["dueno_id"]
           },
         ]
       }
@@ -2027,6 +2306,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "v_cuentas_corrientes"
             referencedColumns: ["tercero_id"]
+          },
+          {
+            foreignKeyName: "reposiciones_tercero_id_fkey"
+            columns: ["tercero_id"]
+            isOneToOne: false
+            referencedRelation: "v_custodia_saldos"
+            referencedColumns: ["dueno_id"]
           },
         ]
       }
@@ -2246,6 +2532,13 @@ export type Database = {
             referencedRelation: "v_cuentas_corrientes"
             referencedColumns: ["tercero_id"]
           },
+          {
+            foreignKeyName: "tercero_cuentas_bancarias_tercero_id_fkey"
+            columns: ["tercero_id"]
+            isOneToOne: false
+            referencedRelation: "v_custodia_saldos"
+            referencedColumns: ["dueno_id"]
+          },
         ]
       }
       tercero_roles: {
@@ -2275,6 +2568,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "v_cuentas_corrientes"
             referencedColumns: ["tercero_id"]
+          },
+          {
+            foreignKeyName: "tercero_roles_tercero_id_fkey"
+            columns: ["tercero_id"]
+            isOneToOne: false
+            referencedRelation: "v_custodia_saldos"
+            referencedColumns: ["dueno_id"]
           },
         ]
       }
@@ -2417,6 +2717,13 @@ export type Database = {
             referencedColumns: ["tercero_id"]
           },
           {
+            foreignKeyName: "cheques_beneficiario_id_fkey"
+            columns: ["beneficiario_id"]
+            isOneToOne: false
+            referencedRelation: "v_custodia_saldos"
+            referencedColumns: ["dueno_id"]
+          },
+          {
             foreignKeyName: "cheques_cuenta_id_fkey"
             columns: ["cuenta_id"]
             isOneToOne: false
@@ -2443,6 +2750,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "v_cuentas_corrientes"
             referencedColumns: ["tercero_id"]
+          },
+          {
+            foreignKeyName: "cheques_entregado_por_id_fkey"
+            columns: ["entregado_por_id"]
+            isOneToOne: false
+            referencedRelation: "v_custodia_saldos"
+            referencedColumns: ["dueno_id"]
           },
           {
             foreignKeyName: "cheques_operacion_id_fkey"
@@ -2489,6 +2803,25 @@ export type Database = {
           razon_social: string | null
           saldo_neto: number | null
           tercero_id: string | null
+        }
+        Relationships: []
+      }
+      v_custodia_fisicas: {
+        Row: {
+          bolsas: number | null
+          dueno_id: string | null
+          lugar_id: string | null
+        }
+        Relationships: []
+      }
+      v_custodia_saldos: {
+        Row: {
+          a_reponer: number | null
+          dueno: string | null
+          dueno_id: string | null
+          fisicas: number | null
+          pagado_en_plata: number | null
+          ultimo_movimiento: string | null
         }
         Relationships: []
       }
@@ -2606,6 +2939,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "v_cuentas_corrientes"
             referencedColumns: ["tercero_id"]
+          },
+          {
+            foreignKeyName: "gastos_proveedor_id_fkey"
+            columns: ["proveedor_id"]
+            isOneToOne: false
+            referencedRelation: "v_custodia_saldos"
+            referencedColumns: ["dueno_id"]
           },
         ]
       }
@@ -2750,6 +3090,13 @@ export type Database = {
             referencedRelation: "v_cuentas_corrientes"
             referencedColumns: ["tercero_id"]
           },
+          {
+            foreignKeyName: "obligaciones_tercero_id_fkey"
+            columns: ["tercero_id"]
+            isOneToOne: false
+            referencedRelation: "v_custodia_saldos"
+            referencedColumns: ["dueno_id"]
+          },
         ]
       }
       v_operaciones: {
@@ -2826,6 +3173,13 @@ export type Database = {
             referencedColumns: ["tercero_id"]
           },
           {
+            foreignKeyName: "operaciones_comisionista_id_fkey"
+            columns: ["comisionista_id"]
+            isOneToOne: false
+            referencedRelation: "v_custodia_saldos"
+            referencedColumns: ["dueno_id"]
+          },
+          {
             foreignKeyName: "operaciones_comprador_id_fkey"
             columns: ["comprador_id"]
             isOneToOne: false
@@ -2838,6 +3192,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "v_cuentas_corrientes"
             referencedColumns: ["tercero_id"]
+          },
+          {
+            foreignKeyName: "operaciones_comprador_id_fkey"
+            columns: ["comprador_id"]
+            isOneToOne: false
+            referencedRelation: "v_custodia_saldos"
+            referencedColumns: ["dueno_id"]
           },
           {
             foreignKeyName: "operaciones_deposito_id_fkey"
@@ -2880,6 +3241,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "v_cuentas_corrientes"
             referencedColumns: ["tercero_id"]
+          },
+          {
+            foreignKeyName: "operaciones_vendedor_id_fkey"
+            columns: ["vendedor_id"]
+            isOneToOne: false
+            referencedRelation: "v_custodia_saldos"
+            referencedColumns: ["dueno_id"]
           },
         ]
       }
@@ -2958,6 +3326,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "v_cuentas_corrientes"
             referencedColumns: ["tercero_id"]
+          },
+          {
+            foreignKeyName: "reposiciones_tercero_id_fkey"
+            columns: ["tercero_id"]
+            isOneToOne: false
+            referencedRelation: "v_custodia_saldos"
+            referencedColumns: ["dueno_id"]
           },
         ]
       }
@@ -3050,6 +3425,10 @@ export type Database = {
       conciliar_linea: {
         Args: { p_linea_id: string; p_movimiento_id: string }
         Returns: undefined
+      }
+      custodia_lugar: {
+        Args: { p_deposito: string; p_ingenio: string }
+        Returns: string
       }
       descontar_cheque: {
         Args: {
@@ -3192,9 +3571,17 @@ export type Database = {
         | "anticipo"
         | "compensacion"
         | "retencion"
+        | "previo"
       rol_usuario: "admin" | "operador" | "finanzas" | "lectura"
       sentido_obligacion: "cobrar" | "pagar"
       tipo_comision: "diferencia" | "por_bolsa" | "fija" | "porcentaje"
+      tipo_mov_custodia:
+        | "ingreso"
+        | "traslado"
+        | "entrega"
+        | "reposicion"
+        | "pago_plata"
+        | "retiro"
       tipo_mov_stock:
         | "entrada_compra"
         | "salida_carga"
@@ -3388,10 +3775,19 @@ export const Constants = {
         "anticipo",
         "compensacion",
         "retencion",
+        "previo",
       ],
       rol_usuario: ["admin", "operador", "finanzas", "lectura"],
       sentido_obligacion: ["cobrar", "pagar"],
       tipo_comision: ["diferencia", "por_bolsa", "fija", "porcentaje"],
+      tipo_mov_custodia: [
+        "ingreso",
+        "traslado",
+        "entrega",
+        "reposicion",
+        "pago_plata",
+        "retiro",
+      ],
       tipo_mov_stock: [
         "entrada_compra",
         "salida_carga",

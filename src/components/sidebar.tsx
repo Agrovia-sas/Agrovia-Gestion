@@ -17,6 +17,7 @@ const GRUPOS: { titulo: string; items: Item[] }[] = [
       { href: "/terceros?rol=comprador", label: "Clientes", icon: "◉" },
       { href: "/terceros?rol=productor", label: "Productores y proveedores", icon: "◎" },
       { href: "/cargas", label: "Stock y cargas", icon: "▤" },
+      { href: "/custodia", label: "Bolsas en custodia", icon: "⌂" },
       { href: "/comisiones", label: "Comisiones", icon: "%" },
       { href: "/comisiones/pendientes", label: "Comisiones pendientes", icon: "!" },
       { href: "/pronto/reposiciones", label: "Reposiciones", icon: "↺", pronto: true },

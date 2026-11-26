@@ -124,6 +124,19 @@ export function CamposOperacion({
         </Field>
       </div>
 
+      {modalidad !== "facturado" && (
+        <label className="flex items-start gap-2 rounded-lg border border-borde bg-fondo p-3 text-sm">
+          <input type="checkbox" name="bolsas_en_custodia" className="mt-0.5" />
+          <span>
+            <strong>Las bolsas son del vendedor, en custodia</strong>
+            <span className="block text-xs text-texto-2">
+              Son bolsas que te dejó guardadas y usás para esta venta: cada carga se descuenta de lo que tenés de él y queda como bolsas a reponerle.
+              No se genera deuda en pesos con el vendedor.
+            </span>
+          </span>
+        </label>
+      )}
+
       {modalidad === "compraventa" && (
         <>
           <label className="flex items-center gap-2 text-sm">
