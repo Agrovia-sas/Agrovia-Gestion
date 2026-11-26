@@ -202,6 +202,67 @@ export type Database = {
           },
         ]
       }
+      arqueos: {
+        Row: {
+          contado: number
+          created_at: string
+          created_by: string | null
+          cuenta_id: string
+          diferencia: number | null
+          fecha: string
+          id: string
+          movimiento_ajuste_id: string | null
+          observaciones: string | null
+          saldo_sistema: number
+        }
+        Insert: {
+          contado: number
+          created_at?: string
+          created_by?: string | null
+          cuenta_id: string
+          diferencia?: number | null
+          fecha?: string
+          id?: string
+          movimiento_ajuste_id?: string | null
+          observaciones?: string | null
+          saldo_sistema: number
+        }
+        Update: {
+          contado?: number
+          created_at?: string
+          created_by?: string | null
+          cuenta_id?: string
+          diferencia?: number | null
+          fecha?: string
+          id?: string
+          movimiento_ajuste_id?: string | null
+          observaciones?: string | null
+          saldo_sistema?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "arqueos_cuenta_id_fkey"
+            columns: ["cuenta_id"]
+            isOneToOne: false
+            referencedRelation: "cuentas_tesoreria"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "arqueos_cuenta_id_fkey"
+            columns: ["cuenta_id"]
+            isOneToOne: false
+            referencedRelation: "v_saldos_cuentas"
+            referencedColumns: ["cuenta_id"]
+          },
+          {
+            foreignKeyName: "arqueos_movimiento_ajuste_id_fkey"
+            columns: ["movimiento_ajuste_id"]
+            isOneToOne: false
+            referencedRelation: "movimientos"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       auditoria: {
         Row: {
           accion: string
@@ -2818,13 +2879,13 @@ export type Database = {
         Row: {
           a_reponer: number | null
           a_reponer_total: number | null
-          libres: number | null
-          vendidas_sin_cargar: number | null
           dueno: string | null
           dueno_id: string | null
           fisicas: number | null
+          libres: number | null
           pagado_en_plata: number | null
           ultimo_movimiento: string | null
+          vendidas_sin_cargar: number | null
         }
         Relationships: []
       }
@@ -3510,6 +3571,17 @@ export type Database = {
         Args: { p_operacion_id: string }
         Returns: undefined
       }
+      registrar_arqueo: {
+        Args: {
+          p_ajustar?: boolean
+          p_contado: number
+          p_cuenta: string
+          p_fecha?: string
+          p_observaciones?: string
+        }
+        Returns: string
+      }
+      registrar_movimiento: { Args: { p: Json }; Returns: string }
       revertir_movimiento: {
         Args: { p_motivo: string; p_movimiento_id: string }
         Returns: string

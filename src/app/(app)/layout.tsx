@@ -24,9 +24,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
           <div className="flex flex-wrap gap-2">
             <Link href="/operaciones/nueva" className={btn("primary")}>+ Operación</Link>
             <Link href="/cargas" className={btn("secondary")}>+ Carga</Link>
-            <span className={btn("secondary") + " cursor-not-allowed opacity-50"} title="Llega con la etapa de finanzas">
-              + Cobro/Pago
-            </span>
+            <Link href="/tesoreria/caja" className={btn("secondary")}>+ Cobro/Pago</Link>
           </div>
           <div className="flex items-center gap-3 text-sm">
             <span className="hidden text-texto-2 sm:inline">{perfil?.nombre ?? user.email}</span>

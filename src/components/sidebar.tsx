@@ -28,8 +28,8 @@ const GRUPOS: { titulo: string; items: Item[] }[] = [
     titulo: "Finanzas",
     items: [
       { href: "/pronto/cuentas-corrientes", label: "Cuentas corrientes", icon: "≡", pronto: true },
-      { href: "/pronto/galicia", label: "Banco Galicia", icon: "$", pronto: true },
-      { href: "/pronto/caja", label: "Caja y efectivo", icon: "¤", pronto: true },
+      { href: "/tesoreria/galicia", label: "Banco Galicia", icon: "$" },
+      { href: "/tesoreria/caja", label: "Caja y efectivo", icon: "¤" },
       { href: "/pronto/echeqs", label: "Gestión de eCheqs", icon: "✎", pronto: true },
       { href: "/pronto/calendario", label: "Calendario", icon: "▣", pronto: true },
     ],
