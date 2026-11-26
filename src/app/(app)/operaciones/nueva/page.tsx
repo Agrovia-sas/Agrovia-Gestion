@@ -9,7 +9,9 @@ import { CamposOperacion } from "./form";
 
 export const dynamic = "force-dynamic";
 
-export default async function NuevaOperacion() {
+export default async function NuevaOperacion({ searchParams }: { searchParams: Promise<{ modalidad?: string }> }) {
+  const { modalidad } = await searchParams;
+  const inicial = modalidad === "menudeo" || modalidad === "compraventa" ? modalidad : "facturado";
   const supabase = await createClient();
   const c = await cargarCatalogos(supabase);
   return (
@@ -26,7 +28,7 @@ export default async function NuevaOperacion() {
       />
       <Card className="max-w-5xl">
         <ActionForm action={crearOperacion} submit="Cerrar operación" resetOnSuccess={false}>
-          <CamposOperacion hoy={hoy()} c={c} />
+          <CamposOperacion hoy={hoy()} c={c} modalidadInicial={inicial} />
         </ActionForm>
       </Card>
     </>

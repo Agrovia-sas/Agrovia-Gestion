@@ -34,8 +34,10 @@ function Terceros({ name, principales, todos, etiqueta, requerido }: { name: str
 export function CamposOperacion({
   hoy,
   c,
+  modalidadInicial = "facturado",
 }: {
   hoy: string;
+  modalidadInicial?: string;
   c: {
     terceros: T[];
     productores: T[];
@@ -46,7 +48,7 @@ export function CamposOperacion({
     ubicaciones: Opcion[];
   };
 }) {
-  const [modalidad, setModalidad] = useState("facturado");
+  const [modalidad, setModalidad] = useState(modalidadInicial);
   const [v, setV] = useState({ bolsas: "", compra: "", venta: "", flete: "", iibb: "", dyc: "", otros: "", tipo: "diferencia", valor: "" });
   const set = (k: keyof typeof v) => (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => setV({ ...v, [k]: e.target.value });
 
