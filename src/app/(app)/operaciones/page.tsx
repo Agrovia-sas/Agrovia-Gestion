@@ -5,6 +5,8 @@ import { $, bolsas, fecha, ESTADO_COMISION, ESTADO_LOGISTICO, MODALIDADES } from
 import type { Database } from "@/lib/database.types";
 
 export const dynamic = "force-dynamic";
+
+const NOMBRE_MES = ["Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio", "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre"];
 type Enums = Database["public"]["Enums"];
 type Modalidad = Enums["modalidad_operacion"];
 
@@ -69,6 +71,24 @@ export default async function Operaciones({
   const totalBolsas = lista.reduce((s, o) => s + (o.bolsas_totales ?? 0), 0);
   const totalPendCarga = lista.reduce((s, o) => s + Math.max(0, o.bolsas_pendientes ?? 0), 0);
 
+  // Agrupado por mes (la lista viene ordenada de la más nueva a la más vieja)
+  type Grupo = { clave: string; nombre: string; ops: typeof lista; bolsas: number; pendientes: number; comision: number };
+  const grupos: Grupo[] = [];
+  lista.forEach((o) => {
+    const clave = (o.fecha_cierre ?? "").slice(0, 7);
+    let g = grupos[grupos.length - 1];
+    if (!g || g.clave !== clave) {
+      const [a, m] = clave.split("-");
+      g = { clave, nombre: `${NOMBRE_MES[Number(m) - 1] ?? "Sin fecha"} ${a ?? ""}`, ops: [], bolsas: 0, pendientes: 0, comision: 0 };
+      grupos.push(g);
+    }
+    g.ops.push(o);
+    g.bolsas += o.bolsas_totales ?? 0;
+    g.pendientes += Math.max(0, o.bolsas_pendientes ?? 0);
+    g.comision += Number(o.comision_neta_agrovia ?? 0);
+  });
+  const columnas = 7 + (modalidad === "compraventa" ? 1 : 0) + (modalidad === "facturado" ? 1 : 0);
+
   const link = (cambios: Record<string, string | undefined>) => {
     const p = new URLSearchParams();
     Object.entries({ ...f, ...cambios }).forEach(([k, v]) => v && p.set(k, v));
@@ -124,6 +144,45 @@ export default async function Operaciones({
           </label>
         </form>
 
+        {grupos.length > 0 && (
+          <details open className="mb-5 rounded-lg border border-borde">
+            <summary className="cursor-pointer px-4 py-2 text-sm font-semibold">Resumen por mes</summary>
+            <div className="overflow-x-auto px-2 pb-2">
+              <table className="w-full text-sm">
+                <thead className="text-left text-xs uppercase tracking-wide text-texto-2">
+                  <tr>
+                    <th className={th}>Mes</th>
+                    <th className={th + " num"}>Operaciones</th>
+                    <th className={th + " num"}>Bolsas</th>
+                    <th className={th + " num"}>Pendientes de carga</th>
+                    <th className={th + " num"}>{etiquetaComision}</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-borde">
+                  {grupos.map((g) => (
+                    <tr key={g.clave} className="hover:bg-fondo">
+                      <td className={td + " py-1.5"}>
+                        <a href={`#mes-${g.clave}`} className="hover:underline">{g.nombre}</a>
+                      </td>
+                      <td className={td + " num py-1.5"}>{g.ops.length}</td>
+                      <td className={td + " num py-1.5"}>{bolsas(g.bolsas)}</td>
+                      <td className={td + " num py-1.5 " + (g.pendientes > 0 ? "text-[#9a7210]" : "text-texto-2")}>{bolsas(g.pendientes)}</td>
+                      <td className={td + " num py-1.5 font-semibold"}>{$(g.comision)}</td>
+                    </tr>
+                  ))}
+                  <tr className="border-t-2 border-texto/30 font-semibold">
+                    <td className={td + " py-1.5"}>Total</td>
+                    <td className={td + " num py-1.5"}>{lista.length}</td>
+                    <td className={td + " num py-1.5"}>{bolsas(totalBolsas)}</td>
+                    <td className={td + " num py-1.5"}>{bolsas(totalPendCarga)}</td>
+                    <td className={td + " num py-1.5"}>{$(totalComision)}</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </details>
+        )}
+
         <Table
           head={
             <tr>
@@ -140,7 +199,18 @@ export default async function Operaciones({
           }
           empty={lista.length === 0 ? "No hay operaciones con estos filtros." : undefined}
         >
-          {lista.map((o) => {
+          {grupos.map((g) => [
+            <tr key={`sep-${g.clave}`} id={`mes-${g.clave}`} className="scroll-mt-24 border-t-[3px] border-texto/60 bg-fondo">
+              <td colSpan={columnas} className="px-3 py-2">
+                <div className="flex flex-wrap items-baseline justify-between gap-2">
+                  <span className="text-base font-bold">{g.nombre}</span>
+                  <span className="text-sm font-semibold tabular-nums text-texto-2">
+                    {g.ops.length} operaciones · {bolsas(g.bolsas)} bolsas{g.pendientes > 0 ? ` · ${bolsas(g.pendientes)} pendientes de carga` : ""} · <span className="text-texto">{$(g.comision)}</span>
+                  </span>
+                </div>
+              </td>
+            </tr>,
+            ...g.ops.map((o) => {
             const costos = Number(o.costo_flete) + Number(o.costo_iibb) + Number(o.costo_dyc) + Number(o.costo_otros) + Number(o.costo_ganancias);
             const totalProductor = Number(o.precio_compra ?? 0) * (o.bolsas_totales ?? 0);
             const pag = pagado.get(o.id!) ?? 0;
@@ -182,7 +252,8 @@ export default async function Operaciones({
                 </td>
               </tr>
             );
-          })}
+            }),
+          ])}
           {lista.length > 0 && (
             <tr className="border-t-2 border-texto/20 font-semibold">
               <td className={td} colSpan={2}>Total ({lista.length})</td>
