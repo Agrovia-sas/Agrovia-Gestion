@@ -49,3 +49,13 @@ tests/db/run.sh
 ```
 
 Crea una base `agrovia_test`, aplica las migraciones y corre `tests/db/test_*.sql` (cada una en una transacción que se deshace).
+
+## Decisiones tomadas con AGROVIA
+
+| Fecha | Tema | Decisión |
+|---|---|---|
+| 25/11/2026 | Utilidad en Menudeo y Compra-venta | Se considera cobrada en la proporción en que el comprador pagó la venta |
+| 25/11/2026 | Cobro antes de completar la carga | Queda "Cobrada" con marca de cobro anticipado |
+| 25/11/2026 | Comisión en 0 (compra = venta) | Estado "Sin comisión" |
+| 26/11/2026 | Bolsas en custodia | La deuda con el dueño es en bolsas y nace al vender; se repone en bolsas o se paga en plata |
+| 26/11/2026 | Numeración desde 2027 | **Reinicia en 1 cada año** (1-1, 2-1, A-1). Se distingue por año ("1-1/27"). Implementar en diciembre 2026: numerador por modalidad y año, unicidad (modalidad, año, número), selector de año en Operaciones y Panel |
