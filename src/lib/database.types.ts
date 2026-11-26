@@ -2817,6 +2817,9 @@ export type Database = {
       v_custodia_saldos: {
         Row: {
           a_reponer: number | null
+          a_reponer_total: number | null
+          libres: number | null
+          vendidas_sin_cargar: number | null
           dueno: string | null
           dueno_id: string | null
           fisicas: number | null

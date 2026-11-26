@@ -55,3 +55,24 @@ begin
   perform t.igual((select count(*) from obligaciones where operacion_id = op and sentido = 'pagar' and not anulada), 1::bigint, 'vuelve la deuda en pesos');
   perform t.igual((select sum(bolsas) from stock_movimientos where operacion_id = op)::int, 100, 'vuelve al stock propio');
 end $$;
+
+-- La deuda nace al vender: vendidas sin cargar cuentan como "a reponer"
+do $$
+declare d uuid; ing uuid; s record;
+begin
+  d := t.tercero('DIEGO GRAMAJO');
+  insert into ingenios (nombre) values ('Ing Prueba') returning id into ing;
+  insert into custodia_movimientos (dueno_id, tipo, bolsas, hacia_ingenio_id) values (d, 'ingreso', 600, ing);
+  insert into operaciones (modalidad, vendedor_id, comprador_id, bolsas_negociadas, precio_compra, precio_venta, ubicacion_tipo, ingenio_id, bolsas_en_custodia)
+  values ('menudeo', d, t.tercero('FREI'), 600, 35000, 35000, 'ingenio', ing, true);
+  select * into s from v_custodia_saldos where dueno_id = d;
+  perform t.igual(s.fisicas, 600, 'siguen físicas hasta que carguen');
+  perform t.igual(s.a_reponer_total, 600, 'ya se deben al vender');
+  perform t.igual(s.libres, 0, 'no quedan libres');
+  -- Se puede reponer antes de que carguen
+  insert into custodia_movimientos (dueno_id, tipo, bolsas, hacia_ingenio_id) values (d, 'reposicion', 600, ing);
+  select * into s from v_custodia_saldos where dueno_id = d;
+  perform t.igual(s.a_reponer_total, 0, 'repuestas');
+  perform t.igual(s.fisicas, 1200, 'las vendidas + las repuestas');
+  perform t.igual(s.libres, 600, 'las repuestas quedan libres');
+end $$;

@@ -42,9 +42,9 @@ export default async function Panel() {
       .eq("tipo", "comision")
       .gt("dias_atraso", 0)
       .order("vencimiento"),
-    supabase.from("v_custodia_saldos").select("dueno_id, dueno, fisicas, a_reponer").order("dueno"),
+    supabase.from("v_custodia_saldos").select("dueno_id, dueno, fisicas, a_reponer_total, libres").order("dueno"),
   ]);
-  const enCustodia = (custodia ?? []).filter((x) => (x.fisicas ?? 0) !== 0 || (x.a_reponer ?? 0) !== 0);
+  const enCustodia = (custodia ?? []).filter((x) => (x.fisicas ?? 0) !== 0 || (x.a_reponer_total ?? 0) !== 0);
 
   const pendientes = (pendientesRaw ?? [])
     .map((o) => ({ ...o, pendiente: pendienteAgrovia(o), dias: diasDesde(o.fecha_cierre) }))
@@ -182,7 +182,8 @@ export default async function Panel() {
                     <Link href={`/custodia/${x.dueno_id}`} className="font-medium text-marca hover:underline">{x.dueno}</Link>
                     <div className="flex flex-wrap gap-x-3 text-xs tabular-nums">
                       <span>Físicas {bolsas(x.fisicas)}</span>
-                      {(x.a_reponer ?? 0) > 0 && <span className="font-medium text-[#9a7210]">A reponer {bolsas(x.a_reponer)}</span>}
+                      <span>Libres {bolsas(x.libres)}</span>
+                      {(x.a_reponer_total ?? 0) > 0 && <span className="font-medium text-[#9a7210]">A reponer {bolsas(x.a_reponer_total)}</span>}
                     </div>
                   </li>
                 ))}

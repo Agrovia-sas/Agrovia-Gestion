@@ -15,7 +15,7 @@ export const dynamic = "force-dynamic";
 export default async function CustodiaDueno({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
   const supabase = await createClient();
-  const [{ data: dueno }, { data: movs }, { data: fisicas }, c] = await Promise.all([
+  const [{ data: dueno }, { data: movs }, { data: fisicas }, c, { data: saldo }, { data: vendidas }] = await Promise.all([
     supabase.from("terceros").select("id, razon_social").eq("id", id).maybeSingle(),
     supabase
       .from("custodia_movimientos")
@@ -25,8 +25,19 @@ export default async function CustodiaDueno({ params }: { params: Promise<{ id: 
       .order("created_at"),
     supabase.from("v_custodia_fisicas").select("*").eq("dueno_id", id),
     cargarCatalogos(supabase),
+    supabase.from("v_custodia_saldos").select("*").eq("dueno_id", id).maybeSingle(),
+    supabase
+      .from("v_operaciones")
+      .select("id, numero, comprador, bolsas_pendientes, fecha_cierre")
+      .eq("vendedor_id", id)
+      .eq("estado_comercial", "cerrada")
+      .gt("bolsas_pendientes", 0)
+      .order("fecha_cierre"),
   ]);
   if (!dueno) notFound();
+  const { data: opsCustodia } = await supabase.from("operaciones").select("id").eq("vendedor_id", id).eq("bolsas_en_custodia", true);
+  const idsCustodia = new Set((opsCustodia ?? []).map((x) => x.id));
+  const vendidasSinCargar = (vendidas ?? []).filter((v) => v.id && idsCustodia.has(v.id));
   const lugarNombre = new Map(c.ubicaciones.map((u) => [u.value.split(":")[1], u.label]));
   const lugar = (ing: string | null, dep: string | null) => (ing ?? dep ? lugarNombre.get((ing ?? dep)!) ?? "—" : null);
 
@@ -46,10 +57,11 @@ export default async function CustodiaDueno({ params }: { params: Promise<{ id: 
         subtitle={<Link href="/custodia" className="hover:underline">← Bolsas en custodia</Link>}
         actions={<BotonImprimir />}
       />
-      <div className="grid gap-4 sm:grid-cols-3">
+      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         <Stat label="Físicas en tu poder" value={bolsas(fis)} hint={(fisicas ?? []).filter((f) => (f.bolsas ?? 0) > 0).map((f) => `${f.lugar_id ? lugarNombre.get(f.lugar_id) : "Sin lugar"}: ${bolsas(f.bolsas)}`).join(" · ") || "—"} tone="proceso" />
-        <Stat label="A reponer" value={bolsas(deuda)} hint="Usadas en ventas y todavía no repuestas" tone={deuda > 0 ? "pendiente" : "ok"} />
-        <Stat label="Total a devolverle" value={bolsas(fis + deuda)} hint="Físicas + a reponer" />
+        <Stat label="Vendidas sin cargar" value={bolsas(saldo?.vendidas_sin_cargar ?? 0)} hint={vendidasSinCargar.map((v) => `${v.numero} → ${v.comprador ?? "—"}: ${bolsas(v.bolsas_pendientes)}`).join(" · ") || "—"} />
+        <Stat label="Libres para vender" value={bolsas(saldo?.libres ?? fis)} hint="Físicas que todavía no vendiste" tone="ok" />
+        <Stat label="A reponer" value={bolsas(saldo?.a_reponer_total ?? deuda)} hint="Vendidas (cargadas o no) que todavía no le repusiste" tone={(saldo?.a_reponer_total ?? deuda) > 0 ? "pendiente" : "ok"} />
       </div>
 
       <div className="mt-6 grid gap-6 lg:grid-cols-5">
@@ -62,7 +74,7 @@ export default async function CustodiaDueno({ params }: { params: Promise<{ id: 
                 <th className={th}>Detalle</th>
                 <th className={th + " num"}>Bolsas</th>
                 <th className={th + " num"}>Físicas</th>
-                <th className={th + " num"}>A reponer</th>
+                <th className={th + " num"}>Entregadas sin reponer</th>
                 <th className={th + " print:hidden"}></th>
               </tr>
             }

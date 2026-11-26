@@ -17,9 +17,9 @@ export default async function Custodia() {
     cargarCatalogos(supabase),
   ]);
   const lugarNombre = new Map(c.ubicaciones.map((u) => [u.value.split(":")[1], u.label]));
-  const lista = (saldos ?? []).filter((s) => (s.fisicas ?? 0) !== 0 || (s.a_reponer ?? 0) !== 0);
+  const lista = (saldos ?? []).filter((s) => (s.fisicas ?? 0) !== 0 || (s.a_reponer_total ?? 0) !== 0);
   const totFisicas = lista.reduce((s, x) => s + (x.fisicas ?? 0), 0);
-  const totDeuda = lista.reduce((s, x) => s + (x.a_reponer ?? 0), 0);
+  const totDeuda = lista.reduce((s, x) => s + (x.a_reponer_total ?? 0), 0);
 
   return (
     <>
@@ -35,8 +35,9 @@ export default async function Custodia() {
                 <th className={th}>Dueño</th>
                 <th className={th}>Dónde están</th>
                 <th className={th + " num"}>Físicas</th>
+                <th className={th + " num"}>Vendidas sin cargar</th>
+                <th className={th + " num"}>Libres</th>
                 <th className={th + " num"}>A reponer</th>
-                <th className={th + " num"}>Total del dueño</th>
               </tr>
             }
             empty={lista.length === 0 ? "Todavía no hay bolsas en custodia. Registrá el primer ingreso con el formulario." : undefined}
@@ -57,13 +58,15 @@ export default async function Custodia() {
                     ))}
                 </td>
                 <td className={td + " num"}>{bolsas(s.fisicas)}</td>
-                <td className={td + " num font-semibold " + ((s.a_reponer ?? 0) > 0 ? "text-[#9a7210]" : "")}>{bolsas(s.a_reponer)}</td>
-                <td className={td + " num"}>{bolsas((s.fisicas ?? 0) + (s.a_reponer ?? 0))}</td>
+                <td className={td + " num"}>{bolsas(s.vendidas_sin_cargar)}</td>
+                <td className={td + " num"}>{bolsas(s.libres)}</td>
+                <td className={td + " num font-semibold " + ((s.a_reponer_total ?? 0) > 0 ? "text-[#9a7210]" : "")}>{bolsas(s.a_reponer_total)}</td>
               </tr>
             ))}
           </Table>
           <p className="mt-3 text-xs text-texto-2">
-            Total del dueño = las que tenés físicamente + las que usaste y le tenés que reponer. Es lo que le vas a tener que devolver cuando venda.
+            Físicas: las que están en los depósitos o ingenios (incluye las vendidas que todavía no cargaron). Libres: las que todavía podés vender.
+            A reponer: las que ya vendiste (cargadas o no) y todavía no le repusiste ni pagaste.
           </p>
         </Card>
 
