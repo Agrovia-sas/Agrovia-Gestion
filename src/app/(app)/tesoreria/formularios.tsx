@@ -39,8 +39,8 @@ function Comunes({ hoy, medio }: { hoy: string; medio: string }) {
 }
 
 /** Cobro o pago: elegís el tercero y marcás qué se cancela. */
-function CobroPago({ sentido, terceros, hoy, medio, cuentaId }: { sentido: "cobrar" | "pagar"; terceros: T[]; hoy: string; medio: string; cuentaId: string }) {
-  const [tercero, setTercero] = useState("");
+function CobroPago({ sentido, terceros, hoy, medio, cuentaId, terceroInicial = "" }: { sentido: "cobrar" | "pagar"; terceros: T[]; hoy: string; medio: string; cuentaId: string; terceroInicial?: string }) {
+  const [tercero, setTercero] = useState(terceroInicial);
   const [lista, setLista] = useState<Pendiente[]>([]);
   const [sel, setSel] = useState<Record<string, { on: boolean; importe: string; factura: boolean; numero: string }>>({});
   const [extra, setExtra] = useState("");
@@ -173,6 +173,7 @@ export function Formularios({
   otrasCuentas,
   saldoActual,
   inicial = "cobro",
+  terceroInicial = "",
 }: {
   cuentaId: string;
   esCaja: boolean;
@@ -182,6 +183,7 @@ export function Formularios({
   otrasCuentas: { id: string; nombre: string }[];
   saldoActual: number;
   inicial?: string;
+  terceroInicial?: string;
 }) {
   const [tab, setTab] = useState<string>(inicial);
   const medio = esCaja ? "efectivo" : "transferencia";
@@ -198,8 +200,8 @@ export function Formularios({
         ))}
       </div>
 
-      {tab === "cobro" && <CobroPago key="c" sentido="cobrar" terceros={terceros} hoy={hoy} medio={medio} cuentaId={cuentaId} />}
-      {tab === "pago" && <CobroPago key="p" sentido="pagar" terceros={terceros} hoy={hoy} medio={medio} cuentaId={cuentaId} />}
+      {tab === "cobro" && <CobroPago key="c" sentido="cobrar" terceros={terceros} hoy={hoy} medio={medio} cuentaId={cuentaId} terceroInicial={inicial === "cobro" ? terceroInicial : ""} />}
+      {tab === "pago" && <CobroPago key="p" sentido="pagar" terceros={terceros} hoy={hoy} medio={medio} cuentaId={cuentaId} terceroInicial={inicial === "pago" ? terceroInicial : ""} />}
       {tab === "gasto" && <Gasto cuentaId={cuentaId} hoy={hoy} medio={medio} categorias={categorias} terceros={terceros} />}
 
       {tab === "otro" && (

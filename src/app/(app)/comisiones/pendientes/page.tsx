@@ -94,6 +94,7 @@ export default async function ComisionesPendientes({
                 <th className={th}>Carga</th>
                 <th className={th + " num"}>Comisión</th>
                 <th className={th + " num"}>Falta cobrar</th>
+                <th className={th + " print:hidden"}></th>
               </tr>
             }
             empty={lista.length === 0 ? "No hay comisiones pendientes. 🎉" : undefined}
@@ -120,12 +121,20 @@ export default async function ComisionesPendientes({
                 </td>
                 <td className={td + " num text-texto-2"}>{$(o.comision_neta_agrovia)}</td>
                 <td className={td + " num font-semibold"}>{$(o.pendiente)}</td>
+                <td className={td + " print:hidden"}>
+                  {o.comprador_id && (
+                    <Link href={`/tesoreria/caja?accion=cobro&tercero=${o.comprador_id}`} className="rounded-lg border border-borde px-2 py-1 text-xs hover:bg-fondo">
+                      Cobrar
+                    </Link>
+                  )}
+                </td>
               </tr>
             ))}
             {lista.length > 0 && (
               <tr className="border-t-2 border-texto/20">
                 <td className={td + " font-semibold"} colSpan={7}>Total</td>
                 <td className={td + " num font-semibold"}>{$(total)}</td>
+                <td className={td + " print:hidden"}></td>
               </tr>
             )}
           </Table>

@@ -25,9 +25,9 @@ function mesSiguiente(m: string, delta: number) {
   return `${d.getUTCFullYear()}-${String(d.getUTCMonth() + 1).padStart(2, "0")}`;
 }
 
-export default async function Tesoreria({ params, searchParams }: { params: Promise<{ cuenta: string }>; searchParams: Promise<{ mes?: string; accion?: string }> }) {
+export default async function Tesoreria({ params, searchParams }: { params: Promise<{ cuenta: string }>; searchParams: Promise<{ mes?: string; accion?: string; tercero?: string }> }) {
   const { cuenta: slug } = await params;
-  const { mes: mesParam, accion } = await searchParams;
+  const { mes: mesParam, accion, tercero: terceroParam } = await searchParams;
   const def = CUENTAS[slug];
   if (!def) notFound();
   const supabase = await createClient();
@@ -180,7 +180,8 @@ export default async function Tesoreria({ params, searchParams }: { params: Prom
             categorias={categorias ?? []}
             otrasCuentas={(cuentas ?? []).filter((c) => c.id !== cuenta.id).map((c) => ({ id: c.id, nombre: c.nombre }))}
             saldoActual={saldoActual}
-            inicial={accion === "pago" ? "pago" : accion === "gasto" ? "gasto" : !cuenta.fecha_saldo_inicial ? "inicial" : "cobro"}
+            inicial={accion === "pago" ? "pago" : accion === "gasto" ? "gasto" : accion === "cobro" ? "cobro" : !cuenta.fecha_saldo_inicial ? "inicial" : "cobro"}
+            terceroInicial={terceroParam ?? ""}
           />
         </Card>
       </div>

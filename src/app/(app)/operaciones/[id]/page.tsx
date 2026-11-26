@@ -339,6 +339,12 @@ export default async function Operacion({ params }: { params: Promise<{ id: stri
               {o.fecha_exigible && <div className="flex justify-between"><dt className="text-texto-2">Exigible desde</dt><dd>{fecha(o.fecha_exigible)}</dd></div>}
               {o.fecha_cobro && <div className="flex justify-between"><dt className="text-texto-2">Cobrada el</dt><dd>{fecha(o.fecha_cobro)}</dd></div>}
               {esFacturado && <p className="pt-2 text-xs text-texto-2">Si se factura, se cobra comisión neta + IVA 21% ({$(Number(o.comision_bruta) * 1.21)}).</p>}
+              {o.comprador_id && (o.estado_comision === "pendiente_cobro" || o.estado_comision === "esperando_carga") && (
+                <div className="flex gap-2 pt-3">
+                  <Link href={`/tesoreria/caja?accion=cobro&tercero=${o.comprador_id}`} className="rounded-lg bg-marca px-3 py-1.5 text-sm text-white hover:bg-marca-medio">Cobrar en Caja</Link>
+                  <Link href={`/tesoreria/galicia?accion=cobro&tercero=${o.comprador_id}`} className="rounded-lg border border-borde px-3 py-1.5 text-sm hover:bg-fondo">en Galicia</Link>
+                </div>
+              )}
             </dl>
             {activa && (
               <details className="mt-4 rounded-lg border border-borde p-3">
