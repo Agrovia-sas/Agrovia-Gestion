@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { Sidebar } from "@/components/sidebar";
+import { InicioEnPanel } from "@/components/inicio-en-panel";
 import { btn } from "@/components/ui";
 import { getSesion } from "@/lib/supabase/server";
 import { salir } from "@/app/login/actions";
@@ -11,6 +12,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
 
   return (
     <div className="min-h-screen">
+      <InicioEnPanel />
       <Sidebar />
       <div className="md:pl-64 print:pl-0">
         <header className="print:hidden sticky top-0 z-30 flex flex-wrap items-center gap-3 border-b border-borde bg-white/95 px-4 py-3 pl-16 backdrop-blur md:pl-6">
